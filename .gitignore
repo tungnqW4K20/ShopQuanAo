@@ -1,0 +1,52 @@
+# node_modules - thư viện cài đặt qua npm/yarn
+node_modules/
+
+# log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# môi trường config
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# build output (React hoặc Node build)
+build/
+dist/
+
+# hệ thống
+.DS_Store
+Thumbs.db
+
+# IDE và editor config
+.vscode/
+.idea/
+
+# Coverage report khi test
+coverage/
+
+# optional
+*.local
+
+# next.js (nếu có)
+.next/
+
+# Parcel cache
+.cache/
+
+# Mac system files
+*.DS_Store
+
+# static cache
+.cache/
+
+# eslint cache
+.eslintcache
+
+# lock files (nếu muốn)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
