@@ -2,13 +2,22 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import Home from './pages/Home/Home'
+import About from './pages/About/About'
+import { Link, Route, Routes } from 'react-router-dom'
+import Header from './component/Header'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-      <h1 className='text-3xl'>Hello world</h1>
+      <Header/>
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
     </>
   )
 }
