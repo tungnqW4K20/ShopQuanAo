@@ -1,5 +1,9 @@
 function Home() {
-    return <h1>Đây là trang chủ</h1>
+    return (
+        <div className="h-[500px]">
+            <h1>Trang chủ</h1>
+        </div>
+    )
   }
   
   export default Home
