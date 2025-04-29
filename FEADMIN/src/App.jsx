@@ -5,6 +5,7 @@ import AdminLayout from './layouts/AdminLayout';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage'; 
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import ManageCategories from './pages/ManageCategories';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="manage/categories" element={<ManageCategories />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

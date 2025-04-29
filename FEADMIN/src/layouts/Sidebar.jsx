@@ -5,21 +5,22 @@ import {
   AiOutlineSetting,
   AiOutlineUsergroupAdd,
   AiOutlineLogout
-} from 'react-icons/ai'; 
+} from 'react-icons/ai';
+import { BiCategoryAlt } from "react-icons/bi"; // <-- Import icon category
 
 function Sidebar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('isAdminAuthenticated');
-    navigate('/login');
+    navigate('/login'); // Chuyển hướng về trang login
   };
 
   const getNavLinkClass = ({ isActive }) =>
     `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
       isActive
-        ? 'bg-indigo-600 text-white'
-        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+        ? 'bg-indigo-600 text-white' // Active style
+        : 'text-gray-300 hover:bg-gray-700 hover:text-white' // Default and hover style
     }`;
 
   return (
@@ -28,6 +29,7 @@ function Sidebar() {
          <h2 className="text-2xl font-semibold text-white">Admin Panel</h2>
       </div>
       <nav className="flex flex-col flex-grow space-y-2">
+        {/* Sử dụng `end` cho Dashboard để nó không active khi vào path con */}
         <NavLink to="/" end className={getNavLinkClass}>
           <AiOutlineHome className="w-5 h-5 mr-3" />
           Dashboard
@@ -36,6 +38,12 @@ function Sidebar() {
           <AiOutlineUsergroupAdd className="w-5 h-5 mr-3" />
           Quản lý Users
         </NavLink>
+        {/* --- Link mới cho Danh mục --- */}
+        <NavLink to="/manage/categories" className={getNavLinkClass}>
+          <BiCategoryAlt className="w-5 h-5 mr-3" />
+          Quản lý Danh mục
+        </NavLink>
+        {/* --- End Link mới --- */}
         <NavLink to="/manage/settings" className={getNavLinkClass}>
           <AiOutlineSetting className="w-5 h-5 mr-3" />
           Cài đặt
