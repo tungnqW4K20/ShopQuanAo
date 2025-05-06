@@ -14,7 +14,7 @@ const slidesData = [
   },
   {
     id: 2,
-    imageUrl: 'https://ivysweethome.com/wp-content/uploads/2023/03/quan-ao-ngu-doi-cho-vo-chong-mua-he-ivy.jpg',
+    imageUrl: 'https://bizweb.dktcdn.net/100/399/392/files/ao-so-mi-phoi-quan-short-mua-he.jpg?v=1682045991761',
     title: 'SUMMER READY',
     subtitle: 'Giảm 40k đơn từ 299k\nDành cho khách hàng mua lần đầu tại website',
     buttonText: 'MUA NGAY',

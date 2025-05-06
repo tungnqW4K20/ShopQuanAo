@@ -9,6 +9,7 @@ import Header from './component/Header'
 import Footer from './component/Footer'
 import ProductPage from './pages/Products/ProductPage'
 import ProductDetailPage from './pages/ProductsDetail/ProductDetailPage'
+import ShoppingCartPage from './pages/Cart/ShoppingCartPage'
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/products-male" element={<ProductPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<ShoppingCartPage />} />
       </Routes>
       <Footer/>
     </>
