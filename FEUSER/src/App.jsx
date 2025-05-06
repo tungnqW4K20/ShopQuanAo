@@ -8,6 +8,8 @@ import { Link, Route, Routes } from 'react-router-dom'
 import Header from './component/Header'
 import Footer from './component/Footer'
 import ProductPage from './pages/Products/ProductPage'
+import ProductDetailPage from './pages/ProductsDetail/ProductDetailPage'
+
 
 function App() {
   const [count, setCount] = useState(0)
@@ -20,6 +22,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/products-male" element={<ProductPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
       </Routes>
       <Footer/>
     </>

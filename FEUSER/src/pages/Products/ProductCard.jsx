@@ -57,9 +57,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="group relative flex flex-col h-full border border-transparent hover:border-gray-200 hover:shadow-md transition duration-200 ease-in-out rounded-lg overflow-hidden">
-      {/* --- Image Container --- */}
-      {/* REMOVED aspect-ratio classes, ADDED fixed height (e.g., h-72 = 18rem = 288px) */}
-      {/* Choose a height that works best for your design: h-64, h-72, h-80 etc. */}
+      
       <div className="relative w-full overflow-hidden bg-gray-100 h-72"> {/* <<< FIXED HEIGHT APPLIED HERE */}
         {/* Badge */}
         {badge && (
