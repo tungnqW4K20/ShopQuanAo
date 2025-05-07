@@ -6,14 +6,15 @@ import {
   AiOutlineUsergroupAdd,
   AiOutlineLogout
 } from 'react-icons/ai';
-import { BiCategoryAlt } from "react-icons/bi"; // <-- Import icon category
+import { BiCategoryAlt } from "react-icons/bi";
+import { useAuth } from '../contexts/AuthContext'; 
 
 function Sidebar() {
   const navigate = useNavigate();
+  const auth = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('isAdminAuthenticated');
-    navigate('/login'); // Chuyển hướng về trang login
+    auth.logout();
   };
 
   const getNavLinkClass = ({ isActive }) =>

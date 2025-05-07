@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../models');
 const Customer = db.Customer;
+const Admin = db.Admin;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
@@ -91,7 +92,51 @@ const loginCustomer = async (loginData) => {
     return { token, customer: customerInfo };
 };
 
+
+
+const loginAdmin = async (loginData) => {
+    const { username, password } = loginData;
+
+    if (!username || !password) {
+        throw new Error('Vui lòng nhập email/username và mật khẩu.');
+    }
+
+    // --- Tìm customer bằng email hoặc username ---
+    const admin = await Admin.findOne({
+        where: {
+            [db.Sequelize.Op.or]: [ { username: username }]
+        }
+    });
+
+    if (!admin) {
+        throw new Error('Email/username hoặc mật khẩu không chính xác.'); // Thông báo chung để bảo mật
+    }
+
+    // --- So sánh mật khẩu ---
+    const isPasswordMatch = password === admin.password;
+
+    if (!isPasswordMatch) {
+        throw new Error('Email/username hoặc mật khẩu không chính xác.');
+    }
+
+    // --- Tạo JWT ---
+    // Payload chứa thông tin bạn muốn mã hóa vào token (đừng để thông tin nhạy cảm)
+    const payload = {
+        username: admin.username,
+        role: "admin"
+    };
+
+    // Ký token với secret và tùy chọn (ví dụ: thời hạn hết hạn)
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); // Token hết hạn sau 1 giờ
+
+    // --- Trả về token và thông tin cơ bản của user ---
+    // eslint-disable-next-line no-unused-vars
+    const { password: _, ...adminInfo } = admin.toJSON();
+    return { token, admin: adminInfo };
+};
+
 module.exports = {
     registerCustomer,
-    loginCustomer
+    loginCustomer,
+    loginAdmin
 };

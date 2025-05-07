@@ -1,48 +1,27 @@
 import React, { useState, useEffect } from 'react';
-// import { useParams } from 'react-router-dom'; // Uncomment if using routing
+import Breadcrumbs from './Breadcrumbs';         
+import ImageGallery from './ImageGallery';       
+import ProductDescription from './ProductDescription'; 
+import ProductInfo from './ProductInfo';                          
+import { product as productDetailData } from './productDetailData'; 
 
-// --- Import Components ---
-// Adjust paths based on your actual folder structure.
-// Assuming ProductDetailPage.jsx is in 'src/pages/ProductsDetail/'
-// and other components are in 'src/components/'
-
-import Breadcrumbs from './Breadcrumbs';         // For navigation path
-import ImageGallery from './ImageGallery';       // For product images
-import ProductDescription from './ProductDescription'; // For description section
-import ProductReviews from './ProductReviews';       // For reviews section
-import ProductInfo from './ProductInfo';                          // For product details, options, cart (assuming in same folder)
-
-// --- Import Mock Data ---
-// Replace with actual API call in a real application
-import { product as productDetailData } from './productDetailData'; // Assuming data is in same folder
-
-// --- Placeholder Components for other sections ---
-// Replace with your actual implementations later
 const RelatedProducts = ({ products }) => products && products.length > 0 ? <div className="mt-16 lg:mt-24 border-t border-gray-200 pt-10"><h2 className="text-xl font-bold text-center mb-6">Gợi ý sản phẩm</h2>{/* Carousel/Grid UI */}</div> : null;
 const RecentlyViewed = ({ products }) => products && products.length > 0 ? <div className="mt-16 lg:mt-24 border-t border-gray-200 pt-10"><h2 className="text-xl font-bold text-center mb-6">Sản phẩm đã xem</h2>{/* Carousel/Grid UI */}</div> : null;
 
-// --- Main Page Component ---
 function ProductDetailPage() {
-  // const { productId } = useParams(); // Uncomment if using routing
+  const [product, setProduct] = useState(null);                
+  const [isLoading, setIsLoading] = useState(true);             
+  const [selectedColor, setSelectedColor] = useState(null);     
+  const [selectedSize, setSelectedSize] = useState(null);       
+  const [quantity, setQuantity] = useState(1);                  
 
-  // --- State Variables ---
-  const [product, setProduct] = useState(null);                // Holds the fetched product data
-  const [isLoading, setIsLoading] = useState(true);             // Loading state flag
-  const [selectedColor, setSelectedColor] = useState(null);     // Currently selected color object
-  const [selectedSize, setSelectedSize] = useState(null);       // Currently selected size string
-  const [quantity, setQuantity] = useState(1);                  // Quantity to add to cart
-
-  // --- Data Fetching Simulation ---
   useEffect(() => {
     setIsLoading(true);
-    // TODO: In a real app, replace this timeout with an API call
-    // fetch(`/api/products/${productId || productDetailData.id}`).then(res => res.json()).then(data => { ... })
+    
     const timer = setTimeout(() => {
-      // --- Add sample review data to mock data if it doesn't exist ---
-      // This ensures the reviews component has data for testing
       const mockProductData = {
         ...productDetailData,
-        reviews: productDetailData.reviews || { // Ensure reviews object exists
+        reviews: productDetailData.reviews || {
           averageRating: 4.8,
           totalReviews: 274,
           reviewsList: [
@@ -165,23 +144,16 @@ function ProductDetailPage() {
         {/* End Container for Top Sections */}
 
 
-        {/* Sections that manage their own background/container */}
-        {/* Description Section */}
+       
         {product.description && <ProductDescription description={product.description} />}
 
-        {/* Product Reviews Section */}
-        {/* Render only if there's review data */}
+
         {reviewsComponentData && <ProductReviews reviewsData={reviewsComponentData} />}
 
 
         {/* Container for Bottom Sections (Related, Recently Viewed) */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16"> {/* Added bottom padding */}
-          {/* Related Products */}
-          {/* Pass actual related product data here */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-16"> 
           <RelatedProducts products={product.relatedProducts || []} />
-
-          {/* Recently Viewed Products */}
-          {/* Pass actual recently viewed data here */}
           <RecentlyViewed products={product.recentlyViewed || []} />
         </div>
         {/* End Container for Bottom Sections */}

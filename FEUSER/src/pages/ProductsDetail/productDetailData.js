@@ -82,5 +82,5 @@ export const product = {
     relatedProducts: [ /* Array of product IDs or simplified product objects from data.js */ ],
     reviews: { /* Review data structure */ },
     recentlyViewed: [ /* Array of product IDs or simplified product objects from data.js */ ],
-    offerBannerImage: '/images/offer-banner-polo.jpg'
+    offerBannerImage: 'https://media3.coolmate.me/cdn-cgi/image/width=713,height=1050,quality=85,format=auto/uploads/May2025/footer_voucher_555.jpg'
   };

@@ -67,7 +67,43 @@ const login = async (req, res, next) => {
     }
 };
 
+
+const loginAdmin = async (req, res, next) => {
+    try {
+        const { username, password } = req.body;
+         if (!username || !password) {
+             return res.status(400).json({
+                 success: false,
+                 message: 'Vui lòng nhập email/username và mật khẩu.'
+             });
+        }
+
+        const loginData = { 
+            username, 
+            password 
+        };
+        const result = await authService.loginAdmin(loginData);
+
+        res.status(200).json({
+            success: true,
+            message: 'Đăng nhập thành công!',
+            data: result // Chứa token và customer info
+        });
+    } catch (error) {
+         console.error("Login Error:", error.message);
+        if (error.message.includes('không chính xác')) {
+            return res.status(401).json({ success: false, message: error.message }); // 401 Unauthorized
+        }
+         if (error.message.includes('Vui lòng nhập')) {
+             return res.status(400).json({ success: false, message: error.message }); // 400 Bad Request
+        }
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi đăng nhập.' });
+        // next(error);
+    }
+};
+
 module.exports = {
     register,
-    login
+    login,
+    loginAdmin
 };
