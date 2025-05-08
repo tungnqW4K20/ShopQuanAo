@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const { generateToken } = require('../utils/jwt.utils');
 const db = require('../models');
 const Customer = db.Customer;
 const Admin = db.Admin;
@@ -56,7 +56,6 @@ const loginCustomer = async (loginData) => {
         throw new Error('Vui lòng nhập email/username và mật khẩu.');
     }
 
-    // --- Tìm customer bằng email hoặc username ---
     const customer = await Customer.findOne({
         where: {
             [db.Sequelize.Op.or]: [{ email: emailOrUsername }, { username: emailOrUsername }]
@@ -64,18 +63,15 @@ const loginCustomer = async (loginData) => {
     });
 
     if (!customer) {
-        throw new Error('Email/username hoặc mật khẩu không chính xác.'); // Thông báo chung để bảo mật
+        throw new Error('Email/username hoặc mật khẩu không chính xác.');
     }
 
-    // --- So sánh mật khẩu ---
     const isPasswordMatch = await bcrypt.compare(password, customer.password);
 
     if (!isPasswordMatch) {
         throw new Error('Email/username hoặc mật khẩu không chính xác.');
     }
 
-    // --- Tạo JWT ---
-    // Payload chứa thông tin bạn muốn mã hóa vào token (đừng để thông tin nhạy cảm)
     const payload = {
         id: customer.id,
         email: customer.email,
@@ -83,11 +79,7 @@ const loginCustomer = async (loginData) => {
         role: "customer"
     };
 
-    // Ký token với secret và tùy chọn (ví dụ: thời hạn hết hạn)
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); // Token hết hạn sau 1 giờ
-
-    // --- Trả về token và thông tin cơ bản của user ---
-    // eslint-disable-next-line no-unused-vars
+    const token = generateToken(payload, 'customer');
     const { password: _, ...customerInfo } = customer.toJSON();
     return { token, customer: customerInfo };
 };
@@ -101,7 +93,6 @@ const loginAdmin = async (loginData) => {
         throw new Error('Vui lòng nhập email/username và mật khẩu.');
     }
 
-    // --- Tìm customer bằng email hoặc username ---
     const admin = await Admin.findOne({
         where: {
             [db.Sequelize.Op.or]: [ { username: username }]
@@ -109,28 +100,23 @@ const loginAdmin = async (loginData) => {
     });
 
     if (!admin) {
-        throw new Error('Email/username hoặc mật khẩu không chính xác.'); // Thông báo chung để bảo mật
+        throw new Error('Email/username hoặc mật khẩu không chính xác.');
     }
 
-    // --- So sánh mật khẩu ---
     const isPasswordMatch = password === admin.password;
 
     if (!isPasswordMatch) {
         throw new Error('Email/username hoặc mật khẩu không chính xác.');
     }
 
-    // --- Tạo JWT ---
-    // Payload chứa thông tin bạn muốn mã hóa vào token (đừng để thông tin nhạy cảm)
     const payload = {
+        id: admin.id,
         username: admin.username,
         role: "admin"
     };
 
-    // Ký token với secret và tùy chọn (ví dụ: thời hạn hết hạn)
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); // Token hết hạn sau 1 giờ
+    const token = generateToken(payload, 'admin');
 
-    // --- Trả về token và thông tin cơ bản của user ---
-    // eslint-disable-next-line no-unused-vars
     const { password: _, ...adminInfo } = admin.toJSON();
     return { token, admin: adminInfo };
 };

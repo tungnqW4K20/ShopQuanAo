@@ -1,74 +1,53 @@
-import axios from 'axios'; // Cài đặt: npm install axios
+import request from './apiService';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'; // Lấy từ biến môi trường hoặc mặc định
-
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    // Có thể thêm header Authorization nếu API yêu cầu xác thực
-    // 'Authorization': `Bearer ${getToken()}` // Ví dụ hàm lấy token
-  },
-});
-
-// Xử lý lỗi tập trung (tùy chọn)
-apiClient.interceptors.response.use(
-  (response) => response.data, // Chỉ trả về phần data của response thành công
-  (error) => {
-    // Xử lý lỗi chung ở đây nếu muốn
-    const message = error.response?.data?.message || error.message || 'Có lỗi xảy ra từ server';
-    console.error('API Error:', message);
-    // Ném lại lỗi với message đã được chuẩn hóa
-    return Promise.reject(new Error(message));
-  }
-);
+const API_ENDPOINT = '/categories';
 
 const getAllCategories = async () => {
-  // API trả về { success: true, data: [...] } nên cần lấy .data
-  const response = await apiClient.get('/categories');
-  if (response.success) {
-      return response.data;
+  const response = await request({ method: 'get', url: API_ENDPOINT });
+  
+  if (response && response.success) {
+    return response.data;
   } else {
-      throw new Error(response.message || 'Không thể lấy danh sách categories');
+    throw new Error(response?.message || 'Không thể lấy danh sách danh mục từ API.');
   }
 };
 
 const getCategoryById = async (id) => {
-  const response = await apiClient.get(`/categories/${id}`);
-   if (response.success) {
-      return response.data;
+  const response = await request({ method: 'get', url: `${API_ENDPOINT}/${id}` });
+  if (response && response.success) {
+    return response.data;
   } else {
-      throw new Error(response.message || `Không thể lấy category ID ${id}`);
+    throw new Error(response?.message || `Không thể lấy danh mục ID ${id} từ API.`);
   }
 };
 
 const createCategory = async (categoryData) => {
-  // Body API là { name: "..." }
-  const response = await apiClient.post('/categories', categoryData);
-   if (response.success) {
-      return response.data;
+  const response = await request({ method: 'post', url: API_ENDPOINT, data: categoryData });
+  if (response && response.success) {
+    return response.data;
   } else {
-      throw new Error(response.message || 'Tạo category thất bại');
+    throw new Error(response?.message || 'Tạo danh mục thất bại.');
   }
 };
 
 const updateCategory = async (id, categoryData) => {
-  // Body API là { name: "..." }
-  const response = await apiClient.put(`/categories/${id}`, categoryData);
-   if (response.success) {
-      return response.data;
+  const response = await request({ method: 'put', url: `${API_ENDPOINT}/${id}`, data: categoryData });
+  if (response && response.success) {
+    return response.data; // Trả về category vừa cập nhật
   } else {
-      throw new Error(response.message || `Cập nhật category ID ${id} thất bại`);
+    throw new Error(response?.message || `Cập nhật danh mục ID ${id} thất bại.`);
   }
 };
 
 const deleteCategory = async (id) => {
-  const response = await apiClient.delete(`/categories/${id}`);
-   // API xóa thành công có thể trả về success: true, message: "..."
-   if (!response.success) {
-       throw new Error(response.message || `Xóa category ID ${id} thất bại`);
-   }
-   // Không cần return gì cả khi xóa thành công
+  const response = await request({ method: 'delete', url: `${API_ENDPOINT}/${id}` });
+  // API xóa thành công có thể chỉ trả về { success: true, message: "..." }
+  if (response && response.success) {
+    // Không cần return data cụ thể khi xóa thành công, chỉ cần không có lỗi
+    return; 
+  } else {
+    throw new Error(response?.message || `Xóa danh mục ID ${id} thất bại.`);
+  }
 };
 
 const categoryApiService = {

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { setAuthCookies, getAuthToken, getUserInfo, removeAuthCookies } from '../services/cookieService';
-import LoginApiService from '../services/LoginApiService'; // Assuming LoginAdmin is here
+import LoginApiService from '../services/LoginApiService';
+import { setGlobalAuthTokenGetter } from '../services/apiService'; 
 
 const AuthContext = createContext(null);
 
@@ -8,11 +9,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // To handle initial auth check
+  const [isLoading, setIsLoading] = useState(true);
+
+  const getContextToken = useCallback(() => {
+    return token || getAuthTokenFromCookie(); 
+  }, [token]);
 
   useEffect(() => {
     const storedToken = getAuthToken();
     const storedUser = getUserInfo();
+    setGlobalAuthTokenGetter(getContextToken);
 
     if (storedToken && storedUser) {
       setToken(storedToken);
@@ -20,7 +26,11 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
     }
     setIsLoading(false);
-  }, []);
+
+    return () => {
+      setGlobalAuthTokenGetter(() => null);
+    };
+  }, [getContextToken]);
 
   const login = async (credentials) => {
     try {
