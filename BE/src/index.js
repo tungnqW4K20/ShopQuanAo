@@ -4,6 +4,8 @@ const express = require('express');
 const db = require('./models');
 const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
+
+const supplierRoutes = require('./routes/supplier.routes');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -26,6 +28,7 @@ db.sequelize.authenticate()
     // --- Sử dụng Routes ---
     app.use('/api/auth', authRoutes); // Gắn auth routes vào đường dẫn /api/auth
     app.use('/api/categories', categoryRoutes);
+    app.use('/api/suppliers', supplierRoutes);
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
     // const { authenticateToken } = require('./middleware/auth.middleware');
     // app.get('/api/profile', authenticateToken, (req, res) => {
