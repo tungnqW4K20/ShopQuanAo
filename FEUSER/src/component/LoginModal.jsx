@@ -39,7 +39,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
             const firstInput = document.getElementById('login-email');
-            setTimeout(() => firstInput?.focus(), 100);
+            setTimeout(() => firstInput?.focus(), 2500);
         } else {
             
             setEmail('');

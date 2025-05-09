@@ -1,96 +1,105 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom'; // useNavigate không cần thiết trong component này nếu chỉ để điều hướng qua NavLink
+import { NavLink } from 'react-router-dom';
 import {
   AiOutlineHome,
   AiOutlineSetting,
   AiOutlineUsergroupAdd,
   AiOutlineLogout,
-  AiOutlineShop, // Icon cho Sản phẩm
-  AiOutlineSolution, // Icon cho Nhà Cung Cấp (hoặc FaTruck)
+  AiOutlineShop,
+  // AiOutlineSolution, // Kept for potential icon swap
 } from 'react-icons/ai';
 import { BiCategoryAlt } from "react-icons/bi";
-import { 
-  TbFileInvoice, // Icon cho Hóa đơn bán
-  TbReceipt2 // Icon cho Hóa đơn nhập (hoặc TbFileImport)
+import {
+  TbFileInvoice,
+  TbReceipt2
 } from "react-icons/tb";
-import { HiOutlineChartPie } from "react-icons/hi"; // Icon cho Báo cáo
-import { MdOutlineRateReview } from "react-icons/md"; // Icon cho Bình luận
-import { FaTruck } from "react-icons/fa"; // Một lựa chọn khác cho Nhà Cung Cấp
+import { HiOutlineChartPie } from "react-icons/hi";
+import { MdOutlineRateReview } from "react-icons/md";
+import { FaTruck, FaTshirt } from "react-icons/fa"; // FaTshirt as a placeholder for brand icon
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext'; // Ensure this path is correct
 
 function Sidebar() {
-  // const navigate = useNavigate(); // Bỏ nếu không dùng trực tiếp navigate()
   const auth = useAuth();
 
   const handleLogout = () => {
     auth.logout();
-    // navigate('/login'); // Bạn có thể thêm navigate ở đây nếu muốn chuyển hướng sau logout từ AuthContext chưa xử lý
   };
 
   const getNavLinkClass = ({ isActive }) =>
-    `flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+    `flex items-center px-4 py-3 rounded-md transition-colors duration-150 ease-in-out group ${
       isActive
-        ? 'bg-indigo-600 text-white shadow-md' // Thêm shadow cho active
-        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+        ? 'bg-blue-600 text-white font-medium shadow-lg' // Ensure font-medium for active text
+        : 'text-slate-300 hover:bg-slate-700/80 hover:text-white font-normal' // Slightly lighter hover, slate-300 for inactive
     }`;
+    // Note: slate-700/80 is bg-slate-700 with 80% opacity. You can use bg-slate-800 if preferred.
 
   return (
-    <div className="flex flex-col w-72 h-screen px-4 py-8 bg-gray-900 text-gray-100 border-r border-gray-700 overflow-y-auto"> {/* Thêm overflow-y-auto nếu nội dung dài */}
-      <nav className="flex flex-col flex-grow space-y-2">
+    <div className="flex flex-col w-72 h-screen bg-slate-900 text-slate-200 border-r border-slate-700/60 overflow-y-auto">
+      {/* Branding / Logo Area */}
+      <div className="flex items-center justify-center h-16 px-4 border-b border-slate-700/60">
+        {/* Replace with actual Coolmate logo SVG if available for best results */}
+        {/* <img src="/path-to-coolmate-logo.svg" alt="Coolmate Admin" className="h-8 w-auto" /> */}
+        <FaTshirt className="h-7 w-7 text-blue-500 mr-2.5" /> {/* Example Icon */}
+        <h1 className="text-xl font-bold text-white tracking-wider uppercase">
+          COOLMATE
+          <span className="ml-1.5 font-medium text-blue-400 opacity-90 normal-case text-lg">Admin</span>
+        </h1>
+      </div>
+
+      {/* Main Navigation */}
+      <nav className="flex flex-col flex-grow p-3 space-y-1.5 mt-2"> {/* Slightly reduced padding, tighter space */}
         <NavLink to="/" end className={getNavLinkClass}>
-          <AiOutlineHome className="w-5 h-5 mr-3" />
+          <AiOutlineHome className="w-5 h-5 mr-3 flex-shrink-0" />
           Dashboard
         </NavLink>
         <NavLink to="/manage/users" className={getNavLinkClass}>
-          <AiOutlineUsergroupAdd className="w-5 h-5 mr-3" />
+          <AiOutlineUsergroupAdd className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Khách Hàng
         </NavLink>
         <NavLink to="/manage/categories" className={getNavLinkClass}>
-          <BiCategoryAlt className="w-5 h-5 mr-3" />
+          <BiCategoryAlt className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Danh mục
         </NavLink>
-        {/* --- Các mục mới --- */}
         <NavLink to="/manage/suppliers" className={getNavLinkClass}>
-          <FaTruck className="w-5 h-5 mr-3" /> {/* Hoặc AiOutlineSolution */}
+          <FaTruck className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Nhà cung cấp
         </NavLink>
         <NavLink to="/manage/products" className={getNavLinkClass}>
-          <AiOutlineShop className="w-5 h-5 mr-3" />
+          <AiOutlineShop className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Sản phẩm
         </NavLink>
         <NavLink to="/manage/sales-invoices" className={getNavLinkClass}>
-          <TbFileInvoice className="w-5 h-5 mr-3" />
+          <TbFileInvoice className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Hóa đơn Bán
         </NavLink>
         <NavLink to="/manage/purchase-invoices" className={getNavLinkClass}>
-          <TbReceipt2 className="w-5 h-5 mr-3" /> {/* Hoặc TbFileImport */}
+          <TbReceipt2 className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Hóa đơn Nhập
         </NavLink>
         <NavLink to="/manage/reviews" className={getNavLinkClass}>
-          <MdOutlineRateReview className="w-5 h-5 mr-3" />
+          <MdOutlineRateReview className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Bình luận
         </NavLink>
-         {/* --- End Các mục mới --- */}
       </nav>
 
-      {/* Phần Báo cáo và Cài đặt có thể tách ra hoặc để chung */}
-      <div className="mt-auto pt-4 border-t border-gray-700"> {/* Thêm đường kẻ phân cách */}
-        <nav className="flex flex-col space-y-2">
+      {/* Bottom Section: Reports, Settings, Logout */}
+      <div className="mt-auto p-3 border-t border-slate-700/60">
+        <nav className="flex flex-col space-y-1.5">
             <NavLink to="/reports/revenue" className={getNavLinkClass}>
-                <HiOutlineChartPie className="w-5 h-5 mr-3" />
+                <HiOutlineChartPie className="w-5 h-5 mr-3 flex-shrink-0" />
                 Báo cáo Doanh thu
             </NavLink>
             <NavLink to="/manage/settings" className={getNavLinkClass}>
-                <AiOutlineSetting className="w-5 h-5 mr-3" />
+                <AiOutlineSetting className="w-5 h-5 mr-3 flex-shrink-0" />
                 Cài đặt
             </NavLink>
         </nav>
         <button
             onClick={handleLogout}
-            className="flex items-center w-full px-4 py-3 mt-4 text-gray-300 rounded-lg hover:bg-red-600 hover:text-white transition-colors duration-200"
+            className="flex items-center w-full px-4 py-3 mt-3 text-slate-300 rounded-md hover:bg-red-600 hover:text-white transition-colors duration-150 ease-in-out group focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
         >
-            <AiOutlineLogout className="w-5 h-5 mr-3" />
+            <AiOutlineLogout className="w-5 h-5 mr-3 flex-shrink-0" />
             Đăng xuất
         </button>
       </div>
