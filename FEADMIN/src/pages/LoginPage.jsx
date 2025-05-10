@@ -47,7 +47,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center h-screen bg-slate-100 px-4 sm:px-6 lg:px-8">
       {/* Optional: Add a subtle background pattern or image if desired */}
        <div className="absolute inset-0 bg-[url('https://cdn.brvn.vn/topics/1280px/2021/321782_Coolmate-cover_1638433173.jpg')] opacity-100"></div> 
 

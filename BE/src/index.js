@@ -5,9 +5,10 @@ const db = require('./models');
 const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
 const customerRoutes = require('./routes/customer.routes');
-
-
 const supplierRoutes = require('./routes/supplier.routes');
+const productRoutes = require('./routes/product.routes');
+
+
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -32,6 +33,7 @@ db.sequelize.authenticate()
     app.use('/api/categories', categoryRoutes);
     app.use('/api/suppliers', supplierRoutes);
     app.use('/api/customers', customerRoutes);
+    app.use('/api/products', productRoutes);
 
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
     // const { authenticateToken } = require('./middleware/auth.middleware');

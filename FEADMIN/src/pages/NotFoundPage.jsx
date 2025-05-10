@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const NotFoundPage = () => {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 text-white p-6">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 text-white">
             <div className="text-center space-y-8">
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 

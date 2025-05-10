@@ -42,12 +42,24 @@ module.exports = (sequelize, DataTypes) => {
       },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL' // Or 'RESTRICT' / 'CASCADE'
-    }
+    },
+     image_url: {
+      type: DataTypes.STRING(500), // Increased length for potentially long URLs
+      allowNull: true, // Allowing products to not have an image initially
+      validate: {
+        isUrl: {
+          msg: 'Image URL must be a valid URL.'
+        }
+      }
+    },
+
+
   }, {
     sequelize,
     modelName: 'Product',
     tableName: 'products',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
   });
   return Product;
 };
