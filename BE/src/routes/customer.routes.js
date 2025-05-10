@@ -19,7 +19,7 @@ router.get('/:id', customerController.getById); // Simplified: Admin only
 
 // PUT /api/customers/:id - Update a customer
 // router.put('/:id', authenticateToken, authorizeCustomerOrAdmin, customerController.update); // Ideal
-router.put('/:id', customerController.update); // Simplified: Admin only
+router.put('/:id',authenticateToken, customerController.update); // Simplified: Admin only
 
 // DELETE /api/customers/:id - Delete a customer
 // router.delete('/:id', authenticateToken, authorizeCustomerOrAdmin, customerController.deleteCtrl); // Ideal

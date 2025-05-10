@@ -8,6 +8,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import ManageCategories from './pages/ManageCategories';
 import PublicRoute from './components/Auth/PublicRoute';
 import ManageSuppliers from './pages/ManageSuppliers';
+import ManageCustomers from './pages/ManageCustomers';
 
 function App() {
   return (
@@ -32,6 +33,8 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="manage/categories" element={<ManageCategories />} />
         <Route path="manage/suppliers" element={<ManageSuppliers />} />
+        <Route path="manage/customers" element={<ManageCustomers />} />
+
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
