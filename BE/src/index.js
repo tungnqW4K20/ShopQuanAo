@@ -37,8 +37,8 @@ db.sequelize.authenticate()
     app.use('/api/suppliers', supplierRoutes);
     app.use('/api/customers', customerRoutes);
     app.use('/api/products', productRoutes);
-    app.use('/api/colorproducts', colorproductRoutes);
-    app.use('/api/sizeproducts', sizeproductRoutes);
+    app.use('/api/color-products', colorproductRoutes);
+    app.use('/api/size-products', sizeproductRoutes);
 
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
     // const { authenticateToken } = require('./middleware/auth.middleware');

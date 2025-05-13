@@ -10,6 +10,7 @@ import PublicRoute from './components/Auth/PublicRoute';
 import ManageSuppliers from './pages/ManageSuppliers';
 import ManageCustomers from './pages/ManageCustomers';
 import ManageProducts from './pages/ManageProducts';
+import ProductEditPage from './pages/ProductEditPage';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="manage/suppliers" element={<ManageSuppliers />} />
         <Route path="manage/customers" element={<ManageCustomers />} />
         <Route path="manage/products" element={<ManageProducts />} />
+        <Route path="/admin/products/:productId/edit" element={<ProductEditPage />} /> 
 
       </Route>
 

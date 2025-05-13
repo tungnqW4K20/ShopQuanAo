@@ -1,43 +1,33 @@
-// src/pages/ManageProducts.jsx (or similar path)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import productApiService from '../services/productApiService';
-import categoryApiService from '../services/categoryApiService'; // To fetch categories for modal
-import ProductTable from '../components/Products/ProductTable'; // Adjust path as needed
-import ProductModal from '../components/Products/ProductModal';   // Adjust path as needed
-import ConfirmDeleteModal from '../components/Category/ConfirmDeleteModal'; // Reusable
+import ConfirmDeleteModal from '../components/Shared/ConfirmDeleteModal';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AiOutlinePlus } from 'react-icons/ai';
 import { FaSearch } from 'react-icons/fa';
-import { useAuth } from '../contexts/AuthContext'; // Assuming you have this
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ProductTable from '../components/Products/ProductTable';
 
 function ManageProducts() {
   const [products, setProducts] = useState([]);
-  const [categoriesForModal, setCategoriesForModal] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
 
   const { handleUnauthorized } = useAuth();
   const navigate = useNavigate();
 
-  const fetchPageData = useCallback(async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const [productsData, categoriesData] = await Promise.all([
-        productApiService.getAllProducts(),
-        categoryApiService.getAllCategories() // For the modal dropdown
-      ]);
+      const productsData = await productApiService.getAllProducts();
       setProducts(productsData || []);
-      setCategoriesForModal(categoriesData || []);
     } catch (err) {
-      console.error("Fetch products/categories error in component:", err);
-      toast.error(err.message || 'Không thể tải dữ liệu sản phẩm hoặc danh mục.');
+      console.error("Fetch products error in component:", err);
+      toast.error(err.message || 'Không thể tải dữ liệu sản phẩm.');
       if (err.shouldLogout || err.status === 401) {
         handleUnauthorized();
         navigate('/login');
@@ -48,8 +38,8 @@ function ManageProducts() {
   }, [handleUnauthorized, navigate]);
 
   useEffect(() => {
-    fetchPageData();
-  }, [fetchPageData]);
+    fetchProducts();
+  }, [fetchProducts]);
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -64,14 +54,24 @@ function ManageProducts() {
     setSearchTerm(event.target.value);
   };
 
-  const handleOpenAddModal = () => {
-    setCurrentProduct(null);
-    setIsModalOpen(true);
+  const handleOpenAddProductPage = () => {
+    // Navigate to a dedicated add product page or open a modal for adding
+    // For simplicity, let's assume you might want to navigate to the edit page with a "new" ID
+    // or have a different flow for adding. For now, let's keep it as navigating to an edit page for a new product
+    // which might mean the edit page handles 'new' state.
+    // OR, simply open the existing ProductModal if you keep it for ADDING only.
+    // Let's assume we want to navigate to a page similar to edit for adding, but for now, we'll use edit for an existing one.
+    // A better approach for "Add" would be a separate page or a modal not tied to an existing product ID.
+    // For now, this function might be for a ProductModal if you decide to keep one for *adding* products.
+    // If adding is also done on the /edit page by not passing an ID, that's another pattern.
+    // Let's assume for "Add Product" you will use the new edit page structure but without a productId to signify creation.
+    // This requires the ProductEditPage to handle the "creation" mode.
+    navigate('/admin/products/new/edit'); // Or just /admin/products/add
   };
 
-  const handleOpenEditModal = (product) => {
-    setCurrentProduct(product);
-    setIsModalOpen(true);
+  // MODIFIED:
+  const handleOpenEditPage = (product) => {
+    navigate(`/admin/products/${product.id}/edit`);
   };
 
   const handleOpenDeleteDialog = (product) => {
@@ -79,44 +79,27 @@ function ManageProducts() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setCurrentProduct(null);
-  };
+  // const handleCloseModal = () => { // <--- REMOVE if ProductModal is removed
+  //   setIsModalOpen(false);
+  //   setCurrentProduct(null);
+  // };
 
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
     setProductToDelete(null);
   };
 
-  const handleSaveProduct = async (productData) => {
-    const actionType = currentProduct ? 'Cập nhật' : 'Thêm';
-    try {
-      if (currentProduct) {
-        await productApiService.updateProduct(currentProduct.id, productData);
-      } else {
-        await productApiService.createProduct(productData);
-      }
-      toast.success(`${actionType} sản phẩm thành công!`);
-      handleCloseModal();
-      fetchPageData(); // Refetch products (and categories, though unlikely to change here)
-    } catch (err) {
-      console.error(`Save product error (${actionType}):`, err);
-      toast.error(err.message || `${actionType} sản phẩm thất bại.`);
-      if (err.shouldLogout || err.status === 401) {
-        handleUnauthorized();
-        navigate('/login');
-      }
-    }
-  };
+  // const handleSaveProduct = async (productData) => { // <--- REMOVE if handled on Edit Page
+  // ...
+  // };
 
   const handleDeleteConfirm = async () => {
     if (!productToDelete) return;
     try {
-      await productApiService.deleteProduct(productToDelete.id);
+      await productApiService.deleteProduct(productToDelete.id); // This is hard delete for the main product
       toast.success(`Xóa sản phẩm "${productToDelete.name}" thành công!`);
       handleCloseDeleteDialog();
-      fetchPageData(); // Refetch products
+      fetchProducts();
     } catch (err) {
       console.error("Delete product error:", err);
       toast.error(err.message || 'Xóa sản phẩm thất bại.');
@@ -150,7 +133,7 @@ function ManageProducts() {
               />
             </div>
             <button
-              onClick={handleOpenAddModal}
+              onClick={handleOpenAddProductPage} // This now might navigate to /admin/products/new/edit
               className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 ease-in-out whitespace-nowrap"
             >
               <AiOutlinePlus className="mr-2" /> Thêm Sản phẩm
@@ -169,21 +152,22 @@ function ManageProducts() {
             ) : (
               <ProductTable
                 products={filteredProducts}
-                onEdit={handleOpenEditModal}
-                onDelete={handleOpenDeleteDialog}
+                onEdit={handleOpenEditPage} // <--- MODIFIED
+                onDelete={handleOpenDeleteDialog} // This is for the main product's hard delete
               />
             )}
           </>
         )}
       </div>
 
+      {/* ProductModal is removed from here if editing is on a new page
       <ProductModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleSaveProduct}
         product={currentProduct}
-        categories={categoriesForModal}
-      />
+        categories={categoriesForModal} // categoriesForModal would need to be fetched if this modal is kept for ADD
+      /> */}
 
       <ConfirmDeleteModal
         isOpen={isDeleteDialogOpen}
@@ -191,6 +175,7 @@ function ManageProducts() {
         onConfirm={handleDeleteConfirm}
         itemName={productToDelete?.name}
         itemType="sản phẩm"
+        actionType="xóa vĩnh viễn" // Clarify it's a hard delete for the main product
       />
     </div>
   );

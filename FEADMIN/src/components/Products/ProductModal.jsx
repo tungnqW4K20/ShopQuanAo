@@ -1,4 +1,3 @@
-// src/components/Product/ProductModal.jsx
 import React, { useState, useEffect } from 'react';
 
 function ProductModal({ isOpen, onClose, onSubmit, product, categories = [] }) {

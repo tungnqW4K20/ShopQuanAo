@@ -1,9 +1,7 @@
-// src/components/Product/ProductTable.jsx
 import React from 'react';
 import { AiOutlineEdit, AiOutlineDelete } from 'react-icons/ai';
 
 const ProductTable = ({ products, onEdit, onDelete }) => {
-  // Removed formatDate as it's no longer used in this component
 
   const formatPrice = (price) => {
     if (price === null || price === undefined || isNaN(parseFloat(price))) return 'N/A';
