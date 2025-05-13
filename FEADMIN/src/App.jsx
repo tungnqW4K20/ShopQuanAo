@@ -9,6 +9,7 @@ import ManageCategories from './pages/ManageCategories';
 import PublicRoute from './components/Auth/PublicRoute';
 import ManageSuppliers from './pages/ManageSuppliers';
 import ManageCustomers from './pages/ManageCustomers';
+import ManageProducts from './pages/ManageProducts';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="manage/categories" element={<ManageCategories />} />
         <Route path="manage/suppliers" element={<ManageSuppliers />} />
         <Route path="manage/customers" element={<ManageCustomers />} />
+        <Route path="manage/products" element={<ManageProducts />} />
 
       </Route>
 

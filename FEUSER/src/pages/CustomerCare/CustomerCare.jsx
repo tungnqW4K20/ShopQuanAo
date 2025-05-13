@@ -8,16 +8,16 @@ import {
   MdOutlineCameraAlt,
   MdOutlineQuestionAnswer,
   MdOutlineLiveHelp,
+  MdChat, // Added for Zalo icon replacement
 } from "react-icons/md";
 import { TbShieldCheckered, TbArrowRight } from "react-icons/tb";
-import { BsSearch } from "react-icons/bs";
+import { BsSearch } from "react-icons/bs"; // BsChatDotsFill could also be an option
 import { FiUsers, FiShoppingBag, FiInfo, FiRefreshCw, FiHeadphones, FiArrowRight } from 'react-icons/fi';
 
-// --- Asset Imports (Make sure paths are correct relative to this file) ---
-// Assuming CustomerCare.jsx is in src/ and assets is in src/assets/
-import ZaloIcon from './assets/zalo-icon.png';
-import teamPhoto1 from './assets/team1.jpg';
-import teamPhoto2 from './assets/team2.jpg';
+// --- Asset Imports (Removed local image imports) ---
+// import ZaloIcon from './assets/zalo-icon.png'; // Replaced with react-icon
+// import teamPhoto1 from './assets/team1.jpg';   // Replaced with placeholder
+// import teamPhoto2 from './assets/team2.jpg';   // Replaced with placeholder
 
 //======================================================================
 // Component Definitions (Internal to CustomerCare.jsx)
@@ -69,10 +69,11 @@ const FloatingChatButton = () => {
       href="#" // Add your Zalo chat link here
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-5 right-5 z-50 bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition duration-300"
+      className="fixed bottom-5 right-5 z-50 bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition duration-300 flex items-center justify-center"
       aria-label="Chat via Zalo"
     >
-      <img src={ZaloIcon} alt="Chat Zalo" className="w-8 h-8" />
+      {/* Replaced img tag with react-icon */}
+      <MdChat className="w-7 h-7 text-white" />
     </a>
   );
 };
@@ -108,6 +109,11 @@ function CustomerCare() {
     { id: 4, title: "Tại sao mua hàng trên sàn TMĐT giá thường thấp hơn Website?", snippet: "Cool thường xuyên nhận được thắc mắc của khách hàng về giá của sản phẩm tại các kênh là khác nhau, có một số lý do giải thích..." },
     // Add more articles as needed
   ];
+
+  // --- Placeholder image URLs ---
+  const teamPhoto1_placeholder = "https://mcdn.coolmate.me/image/November2023/mceclip2_60.jpg";
+  const teamPhoto2_placeholder = "https://mcdn.coolmate.me/image/November2023/mceclip3_53.jpg";
+
 
   // --- Component Return JSX ---
   return (
@@ -211,10 +217,10 @@ function CustomerCare() {
       <section className="bg-gray-50 py-10 px-4">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
            <div className="overflow-hidden rounded-lg shadow-md">
-               <img src={teamPhoto1} alt="Coolmate Team Photo 1" className="w-full h-auto md:h-[450px] object-cover transition duration-300 hover:scale-105"/>
+               <img src={teamPhoto1_placeholder} alt="Coolmate Team Photo 1" className="w-full h-auto md:h-[450px] object-cover transition duration-300 hover:scale-105"/>
            </div>
             <div className="overflow-hidden rounded-lg shadow-md">
-               <img src={teamPhoto2} alt="Coolmate Team Photo 2" className="w-full h-auto md:h-[450px] object-cover transition duration-300 hover:scale-105"/>
+               <img src={teamPhoto2_placeholder} alt="Coolmate Team Photo 2" className="w-full h-auto md:h-[450px] object-cover transition duration-300 hover:scale-105"/>
            </div>
         </div>
       </section>
