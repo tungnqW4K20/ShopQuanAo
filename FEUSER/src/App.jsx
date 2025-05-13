@@ -11,6 +11,7 @@ import ProductPage from './pages/Products/ProductPage'
 import ProductDetailPage from './pages/ProductsDetail/ProductDetailPage'
 import ShoppingCartPage from './pages/Cart/ShoppingCartPage'
  import CustomerCare from './pages/CustomerCare/CustomerCare'
+import BlogPage from './pages/Blog/BlogPage'
 
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/cart" element={<ShoppingCartPage />} />
          <Route path="/customer-care" element={<CustomerCare />} />
-    
+         <Route path="/blog" element={<BlogPage />} />
       </Routes>
       <Footer/>
     </>

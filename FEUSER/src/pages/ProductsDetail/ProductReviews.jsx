@@ -1,8 +1,86 @@
-// src/components/ProductReviews.jsx
 import React, { useState } from 'react';
-import StarRating from './StarRating'; // Import the StarRating component
 
-// --- Icon Components (can be moved to a separate icons.js file if preferred) ---
+// --- Mock Data (Now inside ProductReviews.jsx) ---
+const mockReviewsData = {
+  averageRating: 4.7,
+  totalReviews: 158,
+  reviewsList: [
+    { 
+      id: 'rev001', 
+      email: "dinhanhtravelbg@gmail.com", 
+      authorName: "Dinh Anh",
+      date: "03.05.2025", 
+      rating: 5, 
+      comment: "Chất liệu và phom dáng chưa bao giờ làm mình thất vọng. Vải mát, co giãn tốt, mặc tập gym rất thoải mái.",
+      images: [] 
+    },
+    { 
+      id: 'rev002', 
+      email: "thaonguyen@example.com",
+      authorName: "Thảo Nguyễn", 
+      date: "01.05.2025", 
+      rating: 4, 
+      comment: "Áo đẹp, chất lượng tốt. Giao hàng nhanh. Chỉ có điều màu xám hơi tối hơn so với ảnh web một chút.",
+      images: []
+    },
+    { 
+      id: 'rev003', 
+      email: "minhduc.athlete@sport.com", 
+      authorName: "Minh Đức",
+      date: "28.04.2025", 
+      rating: 5, 
+      comment: "Sản phẩm tuyệt vời! Mua 2 cái để thay đổi. Vải thấm hút mồ hôi cực tốt, vận động không bị bí.",
+      // Assuming you have these in public/images/ or use full URLs
+      images: ['/images/review-placeholder-1.jpg'] 
+    },
+    { 
+      id: 'rev004', 
+      email: "user123@domain.net", 
+      authorName: "User123",
+      date: "25.04.2025", 
+      rating: 3, 
+      comment: "Áo bình thường, không quá đặc sắc. Giá hơi cao so với chất lượng nhận được.",
+      images: [] 
+    },
+    { 
+      id: 'rev005', 
+      email: "coolfan@mail.co", 
+      authorName: "Cool Fan",
+      date: "22.04.2025", 
+      rating: 5, 
+      comment: "Yêu Coolmate! Áo này là item thứ 5 mình mua rồi. Luôn hài lòng.",
+      images: ['/images/review-placeholder-2.jpg', '/images/review-placeholder-3.jpg']
+    },
+    { 
+      id: 'rev006', 
+      email: "another.reviewer@example.org", 
+      authorName: "Reviewer Nữa",
+      date: "20.04.2025", 
+      rating: 4, 
+      comment: "Form áo chuẩn, mặc lên tôn dáng. Hy vọng shop ra thêm nhiều màu mới.",
+      images: [] 
+    },
+  ]
+};
+
+// --- Helper Components (StarRating, SearchIcon, CheckIcon, ReviewCard) ---
+// These remain the same as in the previous version of ProductReviews.jsx
+
+const StarRating = ({ rating, totalStars = 5, filledColor = "text-yellow-400", emptyColor = "text-gray-300" }) => {
+  return (
+    <div className="flex items-center">
+      {[...Array(totalStars)].map((_, index) => {
+        const starValue = index + 1;
+        return (
+          <span key={index} className={`text-xl ${starValue <= rating ? filledColor : emptyColor}`}>
+            ★
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -10,188 +88,183 @@ const SearchIcon = () => (
 );
 
 const CheckIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-blue-700">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-white">
+      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+    </svg>
 );
 
-const DownArrowIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-500">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-  </svg>
+const ReviewCard = ({ review }) => (
+  <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm mb-4">
+    <div className="flex items-center mb-2">
+      <span className="font-semibold text-sm text-gray-800">{review.authorName || review.email || "Khách hàng"}</span>
+      <span className="text-gray-400 mx-2 text-xs">•</span>
+      <span className="text-gray-500 text-xs">{review.date}</span>
+    </div>
+    <StarRating rating={review.rating} />
+    <p className="text-gray-700 text-sm mt-2 leading-relaxed">{review.comment}</p>
+    {review.images && review.images.length > 0 && (
+      <div className="mt-3 flex flex-wrap gap-2">
+        {review.images.map((imgUrl, index) => (
+          <img 
+            key={index} 
+            src={imgUrl} 
+            alt={`Review image ${index + 1}`} 
+            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-md border border-gray-200" 
+          />
+        ))}
+      </div>
+    )}
+  </div>
 );
 
-const ReplyIcon = () => ( // Simple reply icon placeholder
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-500 mr-1">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-  </svg>
-);
-// --- End Icon Components ---
 
+// --- Main ProductReviews Component ---
+// If props are passed, they will override the mock data. Otherwise, mock data is used.
+const ProductReviews = ({ 
+  averageRating: propAverageRating, 
+  totalReviews: propTotalReviews, 
+  reviewsList: propReviewsList 
+}) => {
+  // Use passed props if available, otherwise default to mockData
+  const averageRating = propAverageRating !== undefined ? propAverageRating : mockReviewsData.averageRating;
+  const totalReviews = propTotalReviews !== undefined ? propTotalReviews : mockReviewsData.totalReviews;
+  const reviewsList = propReviewsList && propReviewsList.length > 0 ? propReviewsList : mockReviewsData.reviewsList;
 
-const ProductReviews = ({ reviewsData }) => {
-  if (!reviewsData || !reviewsData.reviewsList || reviewsData.reviewsList.length === 0) {
-    // Or render a "No reviews yet" message
-    return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-             <h2 className="text-2xl font-bold text-gray-800 mb-6">ĐÁNH GIÁ SẢN PHẨM</h2>
-             <p className="text-gray-600">Chưa có đánh giá nào cho sản phẩm này.</p>
-        </div>
-    );
-  }
+  const ratingFilters = [5, 4, 3, 2, 1];
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 5;
 
-  const { averageRating, totalReviews, reviewsList } = reviewsData;
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStarFilters, setSelectedStarFilters] = useState([]);
-  const [filterReplied, setFilterReplied] = useState(false);
-  const [filterHasImages, setFilterHasImages] = useState(false);
-  const [sortBy, setSortBy] = useState('Sắp xếp'); // Default sort option
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviewsList.slice(indexOfFirstReview, indexOfLastReview);
+  const displayedReviewCount = Math.min(indexOfLastReview, totalReviews);
 
-  // Placeholder for pagination and filtering logic
-  const displayedReviews = reviewsList.slice(0, 10); // Show first 10 for now
-
-  const starFilterLevels = [5, 4, 3, 2, 1];
-
-  // TODO: Implement actual filtering logic based on state variables
+  // --- Pagination Handlers ---
+  const totalPages = Math.ceil(reviewsList.length / reviewsPerPage);
+  const handlePrevPage = () => setCurrentPage(prev => Math.max(1, prev - 1));
+  const handleNextPage = () => setCurrentPage(prev => Math.min(totalPages, prev + 1));
 
   return (
-    <div className="bg-gray-50 py-8 md:py-12"> {/* Outer background for the section */}
-      <div className="container mx-auto px-2 sm:px-4">
-        <div className="flex flex-col md:flex-row md:space-x-6 lg:space-x-8">
-          {/* --- Left Sidebar --- */}
-          <div className="w-full md:w-1/3 lg:w-1/4 p-4 mb-8 md:mb-0">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">ĐÁNH GIÁ SẢN PHẨM</h2>
-            
-            <div className="relative mb-6">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon />
-              </div>
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm đánh giá" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Phân loại xếp hạng</h3>
-              {starFilterLevels.map(level => (
-                <label key={level} className="flex items-center space-x-2.5 mb-2 cursor-pointer hover:bg-gray-100 p-1.5 rounded-md transition-colors">
-                  <input 
-                    type="checkbox" 
-                    className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                    // onChange={() => handleStarFilterChange(level)} 
-                    // checked={selectedStarFilters.includes(level)}
-                  />
-                  <span className="text-sm text-gray-700">{level}</span>
-                  <StarRating rating={level} starSize="text-md" />
-                </label>
-              ))}
-            </div>
-
-            <div className="bg-blue-50 text-blue-700 p-3.5 rounded-lg text-sm flex items-start space-x-2 mb-6">
-              <CheckIcon />
-              <span>
-                Các review đều đến từ khách hàng đã thực sự mua hàng của Coolmate
+    <div className="bg-gray-50 py-10 sm:py-12 md:py-16 font-sans">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 md:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 leading-tight">
+            ĐÁNH GIÁ <br className="hidden sm:block md:hidden" /> SẢN PHẨM
+          </h1>
+          <div className="mt-4 md:mt-0">
+            <div className="flex items-center">
+              <span className="text-4xl sm:text-5xl font-bold text-gray-800 mr-2">
+                {averageRating ? averageRating.toFixed(1) : 'N/A'}
               </span>
+              <StarRating rating={averageRating || 0} filledColor="text-yellow-400" emptyColor="text-yellow-400 opacity-40" />
             </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Lọc phản hồi</h3>
-              <label className="flex items-center space-x-2.5 mb-2 cursor-pointer hover:bg-gray-100 p-1.5 rounded-md transition-colors">
-                <input 
-                  type="checkbox" 
-                  className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                  checked={filterReplied}
-                  onChange={() => setFilterReplied(!filterReplied)}
-                />
-                <span className="text-sm text-gray-700">Đã phản hồi</span>
-              </label>
-              <label className="flex items-center space-x-2.5 cursor-pointer hover:bg-gray-100 p-1.5 rounded-md transition-colors">
-                <input 
-                  type="checkbox" 
-                  className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  checked={filterHasImages}
-                  onChange={() => setFilterHasImages(!filterHasImages)}
-                />
-                <span className="text-sm text-gray-700">Có hình ảnh</span>
-              </label>
-            </div>
-          </div>
-
-          {/* --- Right Review List --- */}
-          <div className="w-full md:w-2/3 lg:w-3/4 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-end mb-6">
-              <div className="flex items-end mr-4 mb-2 sm:mb-0">
-                <span className="text-5xl lg:text-6xl font-bold text-gray-800 mr-2">{averageRating.toFixed(1)}</span>
-                {/* Use isOverallRating for the main score */}
-                <StarRating rating={averageRating} starSize="text-3xl lg:text-4xl" isOverallRating={true} />
-              </div>
-              <p className="text-sm text-gray-600">Dựa trên {totalReviews} đánh giá đến từ khách hàng</p>
-            </div>
-
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-sm text-gray-600">Hiển thị đánh giá 1-{Math.min(10, displayedReviews.length)}</p>
-              <div className="relative">
-                <select 
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-gray-400 focus:ring-1 focus:ring-blue-500 text-sm"
-                >
-                  <option>Sắp xếp</option>
-                  <option value="newest">Mới nhất</option>
-                  <option value="oldest">Cũ nhất</option>
-                  <option value="highest_rating">Đánh giá cao</option>
-                  <option value="lowest_rating">Đánh giá thấp</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <DownArrowIcon />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {displayedReviews.map(review => (
-                <div key={review.id} className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex justify-between items-start mb-1.5">
-                    <h4 className="font-semibold text-gray-800">{review.authorName}</h4>
-                    <span className="text-xs text-gray-500">{review.date}</span>
-                  </div>
-                  <div className="mb-2.5">
-                    <StarRating rating={review.rating} starSize="text-lg" />
-                  </div>
-                  <p className="text-sm text-gray-700 leading-relaxed mb-3">{review.comment}</p>
-                  
-                  {review.images && review.images.length > 0 && (
-                    <div className="flex space-x-2 mt-2 mb-2">
-                      {review.images.map((imgSrc, index) => (
-                        <img 
-                          key={index} 
-                          src={imgSrc} 
-                          alt={`Review image ${index + 1}`} 
-                          className="w-16 h-16 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
-                          // onClick={() => handleOpenImageModal(imgSrc)} // Optional: for image zoom
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {review.hasReply && (
-                    <div className="mt-2 pt-2 border-t border-gray-100">
-                      <p className="text-xs text-gray-500 flex items-center">
-                        <ReplyIcon /> Phản hồi từ Coolmate (Click để xem)
-                      </p>
-                      {/* Placeholder for actual reply content */}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            {/* TODO: Pagination could go here */}
+            <p className="text-xs text-gray-500 mt-1">Dựa trên {totalReviews || 0} đánh giá đến từ khách hàng</p>
           </div>
         </div>
+
+        {/* Search and Sort Section (UI Only) */}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6 md:mb-8 gap-4">
+          <div className="relative w-full md:w-auto md:flex-grow max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <SearchIcon />
+            </div>
+            <input
+              type="text"
+              placeholder="Tìm kiếm đánh giá"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none shadow-sm"
+            />
+          </div>
+          <div className="relative w-full md:w-auto">
+            <select className="appearance-none w-full md:w-auto bg-white border border-gray-200 text-gray-700 py-2.5 px-4 pr-8 rounded-full leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm shadow-sm">
+              <option>Sắp xếp</option>
+              <option>Mới nhất</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
+              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content: Filters and Reviews */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+          {/* Filters Column (Sidebar - UI Only) */}
+          <div className="lg:col-span-3 space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-600 mb-3">Phân loại xếp hạng</h3>
+              <div className="space-y-2.5">
+                {ratingFilters.map(rating => (
+                  <label key={rating} className="flex items-center space-x-3 cursor-pointer group">
+                    <input type="checkbox" className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-offset-0" />
+                    <StarRating rating={rating} />
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg flex items-start space-x-2 text-blue-700">
+              <div className="bg-blue-600 rounded-sm p-0.5 mt-0.5"><CheckIcon/></div>
+              <p className="text-xs leading-snug">Các review đều đến từ khách hàng đã thực sự mua hàng của Coolmate</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-600 mb-3">Lọc phản hồi</h3>
+              <div className="space-y-2.5">
+                <label className="flex items-center space-x-3 cursor-pointer group">
+                  <input type="checkbox" className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-offset-0" />
+                  <span className="text-sm text-gray-700">Đã phản hồi</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer group">
+                  <input type="checkbox" className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-offset-0" />
+                  <span className="text-sm text-gray-700">Có hình ảnh</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Reviews List Column */}
+          <div className="lg:col-span-9">
+            <p className="text-sm text-gray-500 mb-4">
+              Hiển thị đánh giá {currentReviews.length > 0 ? indexOfFirstReview + 1 : 0}-{displayedReviewCount} trên tổng {totalReviews || 0}
+            </p>
+            {currentReviews.length > 0 ? (
+              currentReviews.map(review => (
+                <ReviewCard key={review.id} review={review} />
+              ))
+            ) : (
+              <p className="text-gray-600">Không có đánh giá nào.</p>
+            )}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                    <button 
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 mx-1 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
+                    >
+                        Trước
+                    </button>
+                    {/* You can add page number indicators here if desired */}
+                    <span className="px-4 py-2 mx-1 text-sm text-gray-700">
+                        Trang {currentPage} / {totalPages}
+                    </span>
+                    <button 
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 mx-1 bg-white border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
+                    >
+                        Sau
+                    </button>
+                </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* Floating Action Button (FAB) - Zalo/Hotline UI Only */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button className="bg-yellow-400 text-blue-700 p-3 rounded-full shadow-lg hover:bg-yellow-500 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6">
+            <path fillRule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5h-1.528a1.5 1.5 0 0 1-1.471-1.258l-.203-.608a13.042 13.042 0 0 1-8.608-8.608l-.608-.203A1.5 1.5 0 0 1 2 5.028V3.5Z" clipRule="evenodd" />
+          </svg>
+        </button>
       </div>
     </div>
   );
