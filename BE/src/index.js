@@ -47,7 +47,6 @@ db.sequelize.authenticate()
     //   res.json({ message: "Đây là trang profile", user: req.user });
     // });
     
-
     app.listen(port, () => {
       console.log(`Server chạy tại http://localhost:${port}`);
     });

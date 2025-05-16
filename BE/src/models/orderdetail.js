@@ -75,7 +75,8 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'OrderDetail',
     tableName: 'ordersdetail', // Use original table name
-    timestamps: true // Add createdAt/updatedAt
+    timestamps: true,
+    paranoid: true // Add createdAt/updatedAt
   });
   return OrderDetail;
 };

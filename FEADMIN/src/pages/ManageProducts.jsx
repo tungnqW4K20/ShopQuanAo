@@ -111,7 +111,7 @@ function ManageProducts() {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-8">
+    <div className="container mx-auto  sm:px-8">
       <ToastContainer autoClose={3000} hideProgressBar />
       <div className="py-8">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-3 sm:space-y-0">
