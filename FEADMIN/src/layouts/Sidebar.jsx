@@ -35,7 +35,7 @@ function Sidebar() {
     // Note: slate-700/80 is bg-slate-700 with 80% opacity. You can use bg-slate-800 if preferred.
 
   return (
-    <div className="flex flex-col w-72 h- full bg-slate-900 text-slate-200 border-r border-slate-700/60 sticky">
+    <div className="flex flex-col w-72 h- full bg-slate-900 text-slate-200 border-r border-slate-700/60">
       {/* Branding / Logo Area */}
       <div className="flex items-center justify-center h-16 px-4 border-b border-slate-700/60">
         {/* Replace with actual Coolmate logo SVG if available for best results */}
@@ -69,7 +69,7 @@ function Sidebar() {
           <AiOutlineShop className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Sản phẩm
         </NavLink>
-        <NavLink to="/manage/sales-invoices" className={getNavLinkClass}>
+        <NavLink to="/manage/orders" className={getNavLinkClass}>
           <TbFileInvoice className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Hóa đơn Bán
         </NavLink>

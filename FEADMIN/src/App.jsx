@@ -11,6 +11,7 @@ import ManageSuppliers from './pages/ManageSuppliers';
 import ManageCustomers from './pages/ManageCustomers';
 import ManageProducts from './pages/ManageProducts';
 import ProductEditPage from './pages/ProductEditPage';
+import ManageOrdersPage from './pages/ManageOrdersPage';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="manage/customers" element={<ManageCustomers />} />
         <Route path="manage/products" element={<ManageProducts />} />
         <Route path="/admin/products/:productId/edit" element={<ProductEditPage />} /> 
+        <Route path="manage/orders" element={<ManageOrdersPage />} />
 
       </Route>
 
