@@ -10,6 +10,9 @@ const productRoutes = require('./routes/product.routes');
 const colorproductRoutes = require('./routes/colorproduct.routes');
 const sizeproductRoutes = require('./routes/sizeproduct.routes');
 
+const orderRoutes = require('./routes/order.routes');
+
+
 
 
 const app = express();
@@ -39,6 +42,7 @@ db.sequelize.authenticate()
     app.use('/api/products', productRoutes);
     app.use('/api/color-products', colorproductRoutes);
     app.use('/api/size-products', sizeproductRoutes);
+    app.use('/api/orders', orderRoutes);
 
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
     // const { authenticateToken } = require('./middleware/auth.middleware');
