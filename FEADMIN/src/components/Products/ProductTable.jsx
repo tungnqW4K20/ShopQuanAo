@@ -1,5 +1,6 @@
 import React from 'react';
 import { AiOutlineEdit, AiOutlineDelete } from 'react-icons/ai';
+import { Link } from 'react-router-dom';
 
 const ProductTable = ({ products, onEdit, onDelete }) => {
 
@@ -19,14 +20,13 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
             <th scope="col" className="py-3 px-4">Giá</th>
             <th scope="col" className="py-3 px-4">Danh mục</th>
             <th scope="col" className="py-3 px-6">Mô tả</th>
-            {/* Ngày tạo and Ngày cập nhật columns removed */}
+            <th scope="col" className="py-3 px-6">Chi tiết</th>
             <th scope="col" className="py-3 px-6 text-right">Hành động</th>
           </tr>
         </thead>
         <tbody>
           {products.length === 0 ? (
             <tr className="bg-white border-b">
-              {/* Adjusted colSpan since two columns were removed */}
               <td colSpan="7" className="py-4 px-6 text-center text-gray-500">
                 Không tìm thấy sản phẩm nào.
               </td>
@@ -40,11 +40,10 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
                     <img
                       src={product.image_url}
                       alt={product.name || 'Ảnh sản phẩm'}
-                      className="h-16 w-16 object-contain rounded border border-gray-200" // Changed to object-contain and added border
+                      className="h-16 w-16 object-contain rounded border border-gray-200"
                       onError={(e) => {
-                        // Fallback if image fails to load
-                        e.currentTarget.onerror = null; // Prevent infinite loop if fallback also fails
-                        e.currentTarget.src = "https://via.placeholder.com/64?text=No+Image"; // Placeholder image
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "https://via.placeholder.com/64?text=No+Image";
                         e.currentTarget.alt = "Không tải được ảnh";
                       }}
                     />
@@ -60,7 +59,13 @@ const ProductTable = ({ products, onEdit, onDelete }) => {
                 <td className="py-3 px-6 text-xs max-w-[250px] break-words" title={product.description}> {/* Changed truncate to break-words */}
                   {product.description}
                 </td>
-                {/* Ngày tạo and Ngày cập nhật columns removed */}
+                <td>
+                  <Link to={`/admin/products/${product.id}/edit`}>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                      Xem
+                    </button>
+                  </Link>
+                </td>
                 <td className="py-3 px-6 text-right space-x-2 whitespace-nowrap">
                   <button
                     onClick={() => onEdit(product)}

@@ -14,88 +14,60 @@ import ColorProductModal from '../components/Products/ColorProductModal';
 import SizeProductModal from '../components/Products/SizeProductModal';
 import ConfirmDeleteModal from '../components/Shared/ConfirmDeleteModal';
 
-import { FaSave, FaSpinner, FaArrowLeft } from 'react-icons/fa';
-import { useAuth } from '../contexts/AuthContext'; // Assuming you have this
+import { FaSpinner, FaArrowLeft, FaImage } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
 
-function ProductEditPage() {
-  const { productId } = useParams(); // Gets productId from URL
+function ProductVariantManagementPage() {
+  const { productId } = useParams();
   const navigate = useNavigate();
-  const { handleUnauthorized } = useAuth(); // Assuming useAuth provides this
+  const { handleUnauthorized } = useAuth();
 
-  const isNewProduct = productId === 'new'; // Check if we are creating a new product
-
-  // Main Product State
   const [product, setProduct] = useState(null);
-  const [productFormData, setProductFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    image_url: '',
-    category_id: '',
-  });
+  const [categoryName, setCategoryName] = useState('');
   const [categories, setCategories] = useState([]);
-  const [productFormErrors, setProductFormErrors] = useState({});
-  const [isSavingProduct, setIsSavingProduct] = useState(false);
 
-  // Color Variants State
   const [colorVariants, setColorVariants] = useState([]);
-  const [showAllColorVariants, setShowAllColorVariants] = useState(false); // To toggle including soft-deleted
+  const [showAllColorVariants, setShowAllColorVariants] = useState(false);
   const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const [currentColorVariant, setCurrentColorVariant] = useState(null);
 
-  // Size Variants State
   const [sizeVariants, setSizeVariants] = useState([]);
   const [showAllSizeVariants, setShowAllSizeVariants] = useState(false);
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
   const [currentSizeVariant, setCurrentSizeVariant] = useState(null);
 
-  // Confirmation Modal State
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [itemToConfirm, setItemToConfirm] = useState(null); // { item: object, action: 'soft-delete' | 'hard-delete' | 'restore', type: 'color' | 'size' }
+  const [itemToConfirm, setItemToConfirm] = useState(null);
 
-  const [loading, setLoading] = useState(!isNewProduct); // Don't load if new product
+  const [loading, setLoading] = useState(true);
 
-  // --- Fetching Data ---
   const fetchProductDetails = useCallback(async () => {
-    if (isNewProduct) {
-      setProduct(null); // Ensure product is null for new
-      setProductFormData({ name: '', description: '', price: '', image_url: '', category_id: '' });
-      setColorVariants([]);
-      setSizeVariants([]);
-      setLoading(false);
-      return;
+    if (!productId) {
+        toast.error("Không tìm thấy ID sản phẩm.");
+        navigate('/admin/products');
+        return;
     }
     setLoading(true);
     try {
       const productData = await productApiService.getProductById(productId);
       setProduct(productData);
-      setProductFormData({
-        name: productData.name || '',
-        description: productData.description || '',
-        price: productData.price !== null ? String(productData.price) : '',
-        image_url: productData.image_url || '',
-        category_id: productData.category_id !== null ? String(productData.category_id) : '',
-      });
+      const cats = await categoryApiService.getAllCategories();
+      setCategories(cats || []);
+      const cat = cats.find(c => c.id === productData.category_id);
+      setCategoryName(cat ? cat.name : 'Không có');
+
     } catch (err) {
       toast.error(`Không thể tải chi tiết sản phẩm: ${err.message}`);
       if (err.shouldLogout || err.status === 401) handleUnauthorized();
-      navigate('/admin/products'); // Navigate back if product not found or error
+      navigate('/admin/products');
     } finally {
       setLoading(false);
     }
-  }, [productId, navigate, handleUnauthorized, isNewProduct]);
+  }, [productId, navigate, handleUnauthorized]);
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const cats = await categoryApiService.getAllCategories();
-      setCategories(cats || []);
-    } catch (err) {
-      toast.error(`Không thể tải danh mục: ${err.message}`);
-    }
-  }, []);
 
   const fetchColorVariants = useCallback(async () => {
-    if (isNewProduct || !productId) return;
+    if (!productId) return;
     try {
       const data = showAllColorVariants
         ? await colorProductApiService.getAllColorProductsByProductIdIncludingDeleted(productId)
@@ -103,11 +75,12 @@ function ProductEditPage() {
       setColorVariants(data || []);
     } catch (err) {
       toast.error(`Không thể tải biến thể màu: ${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
     }
-  }, [productId, showAllColorVariants, isNewProduct]);
+  }, [productId, showAllColorVariants, handleUnauthorized]);
 
   const fetchSizeVariants = useCallback(async () => {
-    if (isNewProduct || !productId) return;
+    if (!productId) return;
     try {
       const data = showAllSizeVariants
         ? await sizeProductApiService.getAllSizeProductsByProductIdIncludingDeleted(productId)
@@ -115,87 +88,27 @@ function ProductEditPage() {
       setSizeVariants(data || []);
     } catch (err) {
       toast.error(`Không thể tải biến thể kích thước: ${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
     }
-  }, [productId, showAllSizeVariants, isNewProduct]);
+  }, [productId, showAllSizeVariants, handleUnauthorized]);
 
   useEffect(() => {
     fetchProductDetails();
-    fetchCategories();
-  }, [fetchProductDetails, fetchCategories]);
+  }, [fetchProductDetails]);
 
   useEffect(() => {
-    if (!isNewProduct) {
+    if (productId) {
         fetchColorVariants();
     }
-  }, [fetchColorVariants, isNewProduct]);
+  }, [fetchColorVariants, productId]);
 
   useEffect(() => {
-    if (!isNewProduct) {
+    if (productId) {
         fetchSizeVariants();
     }
-  }, [fetchSizeVariants, isNewProduct]);
+  }, [fetchSizeVariants, productId]);
 
-
-  // --- Main Product Form Handling ---
-  const handleProductFormChange = (e) => {
-    const { name, value } = e.target;
-    setProductFormData(prev => ({ ...prev, [name]: value }));
-    if (productFormErrors[name]) {
-      setProductFormErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validateProductForm = () => {
-    const newErrors = {};
-    if (!productFormData.name.trim()) newErrors.name = 'Tên sản phẩm không được để trống.';
-    if (!productFormData.description.trim()) newErrors.description = 'Mô tả không được để trống.';
-    if (productFormData.price.trim() && isNaN(parseFloat(productFormData.price))) {
-      newErrors.price = 'Giá phải là một số.';
-    } else if (productFormData.price.trim() && parseFloat(productFormData.price) < 0) {
-      newErrors.price = 'Giá không được âm.';
-    }
-    if (productFormData.image_url.trim() && !/^(ftp|http|https):\/\/[^ "]+$/.test(productFormData.image_url.trim())) {
-        newErrors.image_url = 'Link ảnh không hợp lệ.';
-    }
-    setProductFormErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSaveMainProduct = async (e) => {
-    e.preventDefault();
-    if (!validateProductForm()) return;
-    setIsSavingProduct(true);
-    const dataToSubmit = {
-      ...productFormData,
-      price: productFormData.price.trim() ? parseFloat(productFormData.price) : null,
-      category_id: productFormData.category_id ? parseInt(productFormData.category_id, 10) : null,
-      image_url: productFormData.image_url.trim() ? productFormData.image_url.trim() : null,
-    };
-
-    try {
-      if (isNewProduct) {
-        const newProd = await productApiService.createProduct(dataToSubmit);
-        toast.success('Thêm sản phẩm mới thành công!');
-        navigate(`/admin/products/${newProd.id}/edit`); // Navigate to edit page of newly created product
-      } else {
-        await productApiService.updateProduct(productId, dataToSubmit);
-        toast.success('Cập nhật thông tin sản phẩm thành công!');
-        fetchProductDetails(); // Re-fetch to ensure data consistency
-      }
-    } catch (err) {
-      toast.error(`Lưu sản phẩm thất bại: ${err.message}`);
-      if (err.shouldLogout || err.status === 401) handleUnauthorized();
-    } finally {
-      setIsSavingProduct(false);
-    }
-  };
-
-  // --- Color Variant Modal & Actions ---
   const handleOpenAddColorModal = () => {
-    if (isNewProduct) {
-        toast.error("Vui lòng lưu sản phẩm chính trước khi thêm biến thể.");
-        return;
-    }
     setCurrentColorVariant(null);
     setIsColorModalOpen(true);
   };
@@ -216,15 +129,11 @@ function ProductEditPage() {
       fetchColorVariants();
     } catch (err) {
       toast.error(`${actionType} biến thể màu thất bại: ${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
     }
   };
 
-  // --- Size Variant Modal & Actions ---
   const handleOpenAddSizeModal = () => {
-     if (isNewProduct) {
-        toast.error("Vui lòng lưu sản phẩm chính trước khi thêm biến thể.");
-        return;
-    }
     setCurrentSizeVariant(null);
     setIsSizeModalOpen(true);
   };
@@ -245,10 +154,10 @@ function ProductEditPage() {
       fetchSizeVariants();
     } catch (err) {
       toast.error(`${actionType} biến thể kích thước thất bại: ${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
     }
   };
 
-  // --- Confirmation Modal and Generic Variant Actions ---
   const openConfirmModal = (item, action, type) => {
     setItemToConfirm({ item, action, type });
     setIsConfirmModalOpen(true);
@@ -259,32 +168,44 @@ function ProductEditPage() {
     const { item, action, type } = itemToConfirm;
     let service;
     let successMessage = '';
-
-    if (type === 'color') service = colorProductApiService;
-    if (type === 'size') service = sizeProductApiService;
+    let operationFailedMessage = `Thao tác thất bại: `;
 
     try {
-      if (action === 'soft-delete') {
-        if(type === "color") {
-            await service.softDeleteColorProduct(item.id);
+      if (type === 'color') {
+        service = colorProductApiService;
+        if (action === 'soft-delete') {
+          await service.softDeleteColorProduct(item.id);
+          successMessage = `Đã xóa mềm biến thể màu "${item.name}".`;
+        } else if (action === 'hard-delete') {
+          await service.hardDeleteColorProduct(item.id);
+          successMessage = `Đã xóa vĩnh viễn biến thể màu "${item.name}".`;
+        } else if (action === 'restore') {
+          await service.restoreColorProduct(item.id);
+          successMessage = `Đã khôi phục biến thể màu "${item.name}".`;
         }
-        else if(type === "size")
-        {
-            await service.softDeleteSizeProduct(item.id);
+      } else if (type === 'size') {
+        service = sizeProductApiService;
+        if (action === 'soft-delete') {
+          await service.softDeleteSizeProduct(item.id);
+          successMessage = `Đã xóa mềm biến thể kích thước "${item.name}".`;
+        } else if (action === 'hard-delete') {
+          await service.hardDeleteSizeProduct(item.id);
+          successMessage = `Đã xóa vĩnh viễn biến thể kích thước "${item.name}".`;
+        } else if (action === 'restore') {
+          await service.restoreSizeProduct(item.id);
+          successMessage = `Đã khôi phục biến thể kích thước "${item.name}".`;
         }
-        successMessage = `Đã xóa mềm ${type === 'color' ? 'biến thể màu' : 'biến thể kích thước'} "${item.name}".`;
-      } else if (action === 'hard-delete') {
-        await service.hardDeleteColorProduct(item.id); // Same assumption
-        successMessage = `Đã xóa vĩnh viễn ${type === 'color' ? 'biến thể màu' : 'biến thể kích thước'} "${item.name}".`;
-      } else if (action === 'restore') {
-        await service.restoreColorProduct(item.id); // Same assumption
-        successMessage = `Đã khôi phục ${type === 'color' ? 'biến thể màu' : 'biến thể kích thước'} "${item.name}".`;
+      } else {
+        throw new Error("Loại biến thể không hợp lệ.");
       }
+      
       toast.success(successMessage);
       if (type === 'color') fetchColorVariants();
       if (type === 'size') fetchSizeVariants();
+
     } catch (err) {
-      toast.error(`Thao tác thất bại: ${err.message}`);
+      toast.error(`${operationFailedMessage}${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
     } finally {
       setIsConfirmModalOpen(false);
       setItemToConfirm(null);
@@ -292,8 +213,19 @@ function ProductEditPage() {
   };
 
 
-  if (loading && !isNewProduct) {
+  if (loading) {
     return <div className="flex justify-center items-center h-screen"><FaSpinner className="animate-spin text-4xl text-indigo-600" /></div>;
+  }
+
+  if (!product) {
+    return (
+        <div className="container mx-auto px-4 sm:px-8 py-8 text-center">
+            <h1 className="text-xl text-red-500">Không tìm thấy thông tin sản phẩm.</h1>
+            <Link to="/admin/products" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
+              <FaArrowLeft className="mr-2" /> Quay lại danh sách sản phẩm
+            </Link>
+        </div>
+    );
   }
 
   return (
@@ -305,122 +237,99 @@ function ProductEditPage() {
         </Link>
       </div>
       <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-gray-800 mb-6">
-        {isNewProduct ? 'Thêm Sản Phẩm Mới' : `Chỉnh Sửa Sản Phẩm: ${product?.name || ''}`}
+        Quản Lý Biến Thể Cho Sản Phẩm: {product.name}
       </h1>
 
-      {/* Main Product Form */}
-      <form onSubmit={handleSaveMainProduct} className="bg-white shadow-md rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">Thông Tin Cơ Bản</h2>
-        {/* Product Name */}
-        <div className="mb-4">
-            <label htmlFor="productName" className="block text-sm font-medium text-gray-700 mb-1">Tên Sản phẩm <span className="text-red-500">*</span></label>
-            <input type="text" id="productName" name="name" value={productFormData.name} onChange={handleProductFormChange}
-                   className={`w-full px-3 py-2 border rounded-md shadow-sm ${productFormErrors.name ? 'border-red-500' : 'border-gray-300'}`} />
-            {productFormErrors.name && <p className="text-red-500 text-xs mt-1">{productFormErrors.name}</p>}
-        </div>
-        {/* Description */}
-        <div className="mb-4">
-            <label htmlFor="productDescription" className="block text-sm font-medium text-gray-700 mb-1">Mô tả <span className="text-red-500">*</span></label>
-            <textarea id="productDescription" name="description" value={productFormData.description} onChange={handleProductFormChange} rows="3"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${productFormErrors.description ? 'border-red-500' : 'border-gray-300'}`}></textarea>
-            {productFormErrors.description && <p className="text-red-500 text-xs mt-1">{productFormErrors.description}</p>}
-        </div>
-        {/* Price, Image URL, Category (similar structure) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">Thông Tin Sản Phẩm</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-                <label htmlFor="productPrice" className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
-                <input type="number" id="productPrice" name="price" value={productFormData.price} onChange={handleProductFormChange} step="any"
-                       className={`w-full px-3 py-2 border rounded-md shadow-sm ${productFormErrors.price ? 'border-red-500' : 'border-gray-300'}`} />
-                {productFormErrors.price && <p className="text-red-500 text-xs mt-1">{productFormErrors.price}</p>}
+                <label className="block text-sm font-medium text-gray-500">Tên Sản phẩm</label>
+                <p className="mt-1 text-md text-gray-900">{product.name || 'N/A'}</p>
             </div>
             <div>
-                <label htmlFor="productCategory" className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-                <select id="productCategory" name="category_id" value={productFormData.category_id} onChange={handleProductFormChange}
-                        className={`w-full px-3 py-2 border rounded-md shadow-sm ${productFormErrors.category_id ? 'border-red-500' : 'border-gray-300'}`}>
-                    <option value="">-- Chọn danh mục --</option>
-                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                </select>
+                <label className="block text-sm font-medium text-gray-500">Giá (VNĐ)</label>
+                <p className="mt-1 text-md text-gray-900">
+                    {product.price !== null ? `${Number(product.price).toLocaleString('vi-VN')} VNĐ` : 'N/A'}
+                </p>
+            </div>
+            <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-500">Mô tả</label>
+                <p className="mt-1 text-md text-gray-900 whitespace-pre-wrap">{product.description || 'N/A'}</p>
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-500">Danh mục</label>
+                <p className="mt-1 text-md text-gray-900">{categoryName || 'N/A'}</p>
+            </div>
+            <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-500 mb-1">Ảnh Sản phẩm</label>
+                {product.image_url ? (
+                    <img 
+                        src={product.image_url} 
+                        alt={product.name} 
+                        className="mt-1 max-w-xs h-auto rounded-md border border-gray-300 shadow-sm"
+                        onError={(e) => { e.target.onerror = null; e.target.src="https://via.placeholder.com/150?text=No+Image"; e.target.alt="Image not found"}}
+                    />
+                ) : (
+                    <div className="mt-1 flex items-center justify-center w-32 h-32 bg-gray-100 rounded-md border border-gray-300 text-gray-400">
+                        <FaImage size={40} />
+                    </div>
+                )}
             </div>
         </div>
-        <div className="mb-4">
-            <label htmlFor="productImageUrl" className="block text-sm font-medium text-gray-700 mb-1">Link Ảnh</label>
-            <input type="url" id="productImageUrl" name="image_url" value={productFormData.image_url} onChange={handleProductFormChange}
-                   className={`w-full px-3 py-2 border rounded-md shadow-sm ${productFormErrors.image_url ? 'border-red-500' : 'border-gray-300'}`} />
-            {productFormErrors.image_url && <p className="text-red-500 text-xs mt-1">{productFormErrors.image_url}</p>}
+      </div>
+
+      <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl font-semibold text-gray-700">Quản lý Biến Thể Màu</h2>
+          <label className="flex items-center text-sm text-gray-600">
+            <input type="checkbox" checked={showAllColorVariants} onChange={(e) => setShowAllColorVariants(e.target.checked)} className="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+            Hiện cả đã xóa mềm
+          </label>
         </div>
+        <ColorProductTable
+          colorProducts={colorVariants}
+          onAdd={handleOpenAddColorModal}
+          onEdit={handleOpenEditColorModal}
+          onSoftDelete={(item) => openConfirmModal(item, 'soft-delete', 'color')}
+          onHardDelete={(item) => openConfirmModal(item, 'hard-delete', 'color')}
+          onRestore={(item) => openConfirmModal(item, 'restore', 'color')}
+          showSoftDeleted={showAllColorVariants}
+        />
+      </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSavingProduct}
-            className="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {isSavingProduct ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
-            {isNewProduct ? 'Tạo Sản Phẩm' : 'Lưu Thay Đổi'}
-          </button>
+      <div className="bg-white shadow-md rounded-lg p-6">
+         <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl font-semibold text-gray-700">Quản lý Biến Thể Kích Thước</h2>
+          <label className="flex items-center text-sm text-gray-600">
+            <input type="checkbox" checked={showAllSizeVariants} onChange={(e) => setShowAllSizeVariants(e.target.checked)} className="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+            Hiện cả đã xóa mềm
+          </label>
         </div>
-      </form>
+        <SizeProductTable
+          sizeProducts={sizeVariants}
+          onAdd={handleOpenAddSizeModal}
+          onEdit={handleOpenEditSizeModal}
+          onSoftDelete={(item) => openConfirmModal(item, 'soft-delete', 'size')}
+          onHardDelete={(item) => openConfirmModal(item, 'hard-delete', 'size')}
+          onRestore={(item) => openConfirmModal(item, 'restore', 'size')}
+          showSoftDeleted={showAllSizeVariants}
+        />
+      </div>
 
-      {/* Color Variants Section - Only show if not a new product OR if product has been created */}
-      {!isNewProduct && productId && (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-xl font-semibold text-gray-700">Quản lý Biến Thể Màu</h2>
-            <label className="flex items-center text-sm text-gray-600">
-              <input type="checkbox" checked={showAllColorVariants} onChange={(e) => setShowAllColorVariants(e.target.checked)} className="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-              Hiện cả đã xóa mềm
-            </label>
-          </div>
-          <ColorProductTable
-            colorProducts={colorVariants}
-            onAdd={handleOpenAddColorModal}
-            onEdit={handleOpenEditColorModal}
-            onSoftDelete={(item) => openConfirmModal(item, 'soft-delete', 'color')}
-            onHardDelete={(item) => openConfirmModal(item, 'hard-delete', 'color')}
-            onRestore={(item) => openConfirmModal(item, 'restore', 'color')}
-            showSoftDeleted={showAllColorVariants}
-          />
-        </div>
-      )}
-
-
-      {/* Size Variants Section - Only show if not a new product OR if product has been created */}
-      {!isNewProduct && productId && (
-        <div className="bg-white shadow-md rounded-lg p-6">
-           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-xl font-semibold text-gray-700">Quản lý Biến Thể Kích Thước</h2>
-            <label className="flex items-center text-sm text-gray-600">
-              <input type="checkbox" checked={showAllSizeVariants} onChange={(e) => setShowAllSizeVariants(e.target.checked)} className="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
-              Hiện cả đã xóa mềm
-            </label>
-          </div>
-          <SizeProductTable
-            sizeProducts={sizeVariants}
-            onAdd={handleOpenAddSizeModal}
-            onEdit={handleOpenEditSizeModal}
-            onSoftDelete={(item) => openConfirmModal(item, 'soft-delete', 'size')}
-            onHardDelete={(item) => openConfirmModal(item, 'hard-delete', 'size')}
-            onRestore={(item) => openConfirmModal(item, 'restore', 'size')}
-            showSoftDeleted={showAllSizeVariants}
-          />
-        </div>
-      )}
-
-
-      {/* Modals */}
       <ColorProductModal
         isOpen={isColorModalOpen}
         onClose={() => setIsColorModalOpen(false)}
         onSubmit={handleSaveColorVariant}
         colorProduct={currentColorVariant}
-        productId={productId} // Pass current product ID
+        productId={productId}
       />
       <SizeProductModal
         isOpen={isSizeModalOpen}
         onClose={() => setIsSizeModalOpen(false)}
         onSubmit={handleSaveSizeVariant}
         sizeProduct={currentSizeVariant}
-        productId={productId} // Pass current product ID
+        productId={productId}
       />
       <ConfirmDeleteModal
         isOpen={isConfirmModalOpen}
@@ -431,7 +340,7 @@ function ProductEditPage() {
         actionType={
             itemToConfirm?.action === 'soft-delete' ? 'xóa mềm' :
             itemToConfirm?.action === 'hard-delete' ? 'xóa vĩnh viễn' :
-            itemToConfirm?.action === 'restore' ? 'khôi phục' : 'xóa'
+            itemToConfirm?.action === 'restore' ? 'khôi phục' : 'thực hiện' // fallback
         }
         isRestore={itemToConfirm?.action === 'restore'}
       />
@@ -439,4 +348,4 @@ function ProductEditPage() {
   );
 }
 
-export default ProductEditPage;
+export default ProductVariantManagementPage;
