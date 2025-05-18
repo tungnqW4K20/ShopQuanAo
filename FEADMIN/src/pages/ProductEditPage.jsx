@@ -221,7 +221,7 @@ function ProductVariantManagementPage() {
     return (
         <div className="container mx-auto px-4 sm:px-8 py-8 text-center">
             <h1 className="text-xl text-red-500">Không tìm thấy thông tin sản phẩm.</h1>
-            <Link to="/admin/products" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
+            <Link to="/manage/products" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
               <FaArrowLeft className="mr-2" /> Quay lại danh sách sản phẩm
             </Link>
         </div>
@@ -232,7 +232,7 @@ function ProductVariantManagementPage() {
     <div className="container mx-auto px-4 sm:px-8 py-8">
       <ToastContainer autoClose={3000} hideProgressBar />
       <div className="mb-6">
-        <Link to="/admin/products" className="inline-flex items-center text-indigo-600 hover:text-indigo-800">
+        <Link to="/manage/products" className="inline-flex items-center text-indigo-600 hover:text-indigo-800">
           <FaArrowLeft className="mr-2" /> Quay lại danh sách sản phẩm
         </Link>
       </div>
