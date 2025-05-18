@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { setAuthCookies, getAuthToken, getUserInfo, removeAuthCookies } from '../services/cookieService';
+import { setAuthCookies, getAuthToken as getAuthTokenFromCookie, getUserInfo, removeAuthCookies } from '../services/cookieService';
 import LoginApiService from '../services/LoginApiService';
 import { setGlobalAuthTokenGetter } from '../services/apiService'; 
+import { setUploadAuthTokenGetter } from '../services/uploadApiService'; 
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(null); 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -16,12 +17,14 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   useEffect(() => {
-    const storedToken = getAuthToken();
+    const storedToken = getAuthTokenFromCookie();
     const storedUser = getUserInfo();
+
     setGlobalAuthTokenGetter(getContextToken);
+    setUploadAuthTokenGetter(getContextToken); 
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
+      setToken(storedToken); 
       setUser(storedUser);
       setIsAuthenticated(true);
     }
@@ -29,29 +32,32 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       setGlobalAuthTokenGetter(() => null);
+      setUploadAuthTokenGetter(() => null);
     };
-  }, [getContextToken]);
+  }, [getContextToken]); 
 
   const login = async (credentials) => {
     try {
       const responseData = await LoginApiService.LoginAdmin(credentials);
-      console.log("check: ", responseData)
       if (responseData && responseData.data.token && responseData.data.admin) {
-        setToken(responseData.data.token);
-        setUser(responseData.data.admin);
+        const newToken = responseData.data.token;
+        const newUser = responseData.data.admin;
+
+        setToken(newToken); 
+        setUser(newUser);
         setIsAuthenticated(true);
-        setAuthCookies(responseData.data.token, responseData.data.admin);
+        setAuthCookies(newToken, newUser);
         return responseData;
       } else {
         throw new Error(responseData.message || 'Login failed: Invalid response from server.');
       }
     } catch (error) {
       console.error("AuthContext login error:", error);
-      setIsAuthenticated(false);
-      setUser(null);
       setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
       removeAuthCookies();
-      throw error; // Re-throw for LoginPage to handle
+      throw error;
     }
   };
 
@@ -64,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
-    token,
+    token, 
     isAuthenticated,
     isLoading,
     login,

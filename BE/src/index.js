@@ -1,6 +1,7 @@
 require('dotenv').config();
 const corsMiddleware = require('./config/cors.config');
 const express = require('express');
+const path = require('path');
 const db = require('./models');
 const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
@@ -11,7 +12,7 @@ const colorproductRoutes = require('./routes/colorproduct.routes');
 const sizeproductRoutes = require('./routes/sizeproduct.routes');
 
 const orderRoutes = require('./routes/order.routes');
-
+const uploadRoutes = require('./routes/upload.routes');
 
 
 
@@ -21,7 +22,7 @@ const port = process.env.PORT || 3001;
 app.use(corsMiddleware);
 
 app.use(express.json()); // Middleware để parse JSON request body
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- Kết nối DB và khởi động Server ---
 db.sequelize.authenticate()
@@ -43,7 +44,9 @@ db.sequelize.authenticate()
     app.use('/api/color-products', colorproductRoutes);
     app.use('/api/size-products', sizeproductRoutes);
     app.use('/api/orders', orderRoutes);
+    app.use('/api/uploads', uploadRoutes); // Mount the upload routes
 
+    
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
     // const { authenticateToken } = require('./middleware/auth.middleware');
     // app.get('/api/profile', authenticateToken, (req, res) => {

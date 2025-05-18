@@ -7,7 +7,7 @@ if (!JWT_SECRET) {
 }
 
 const DEFAULT_CUSTOMER_EXPIRES_IN = process.env.JWT_CUSTOMER_EXPIRES_IN || '24h';
-const DEFAULT_ADMIN_EXPIRES_IN = process.env.JWT_ADMIN_EXPIRES_IN || '1h';
+const DEFAULT_ADMIN_EXPIRES_IN = process.env.JWT_ADMIN_EXPIRES_IN || '24h';
 
 const generateToken = (payload, userType) => {
     if (!payload || !payload.id || !payload.role) {

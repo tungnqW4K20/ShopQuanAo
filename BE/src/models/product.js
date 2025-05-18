@@ -45,12 +45,7 @@ module.exports = (sequelize, DataTypes) => {
     },
      image_url: {
       type: DataTypes.STRING(500), // Increased length for potentially long URLs
-      allowNull: true, // Allowing products to not have an image initially
-      validate: {
-        isUrl: {
-          msg: 'Image URL must be a valid URL.'
-        }
-      }
+      allowNull: true
     },
 
 
