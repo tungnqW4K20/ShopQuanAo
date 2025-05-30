@@ -1,4 +1,3 @@
-// services/upload.service.js
 'use strict';
 
 const path = require('path');
@@ -29,5 +28,5 @@ const handleMultipleProductImagesUpload = async (files, req) => {
 
 module.exports = {
     handleProductImageUpload,
-    handleMultipleProductImagesUpload // Export hàm mới
+    handleMultipleProductImagesUpload 
 };

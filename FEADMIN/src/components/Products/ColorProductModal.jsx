@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import uploadApiService from '../../services/uploadApiService'; // Import service upload
+import uploadApiService from '../../services/uploadApiService'; 
 import { toast } from 'react-toastify';
-import { FaTimes, FaSpinner, FaPlus } from 'react-icons/fa'; // Icons
+import { FaTimes, FaSpinner, FaPlus } from 'react-icons/fa';
 
 const MAX_IMAGES = 7;
 const MAX_FILE_SIZE_MB = 5;
@@ -11,16 +11,16 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
     name: '',
     price: '',
     description: '',
-    image_urls: [], // Sẽ lưu các URL ảnh (cả cũ và mới sau khi upload) để submit
+    image_urls: [], 
     product_id: productId || '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
   
-  // States cho quản lý file ảnh
-  const [selectedFiles, setSelectedFiles] = useState([]); // Files mới người dùng chọn (File objects)
-  const [imagePreviews, setImagePreviews] = useState([]); // URLs tạm thời để preview file mới (object URLs)
-  const [existingImageUrls, setExistingImageUrls] = useState([]); // URLs ảnh đã có (khi edit)
+  
+  const [selectedFiles, setSelectedFiles] = useState([]); 
+  const [imagePreviews, setImagePreviews] = useState([]); 
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
   
   const [errors, setErrors] = useState({});
   const [isUploading, setIsUploading] = useState(false);
@@ -33,27 +33,26 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
           name: colorProduct.name || '',
           price: colorProduct.price !== null && colorProduct.price !== undefined ? String(colorProduct.price) : '',
           description: colorProduct.description || '',
-          image_urls: colorProduct.image_urls || [], // image_urls này sẽ được cập nhật trước khi submit
+          image_urls: colorProduct.image_urls || [], 
           product_id: colorProduct.product_id || productId,
         });
         setExistingImageUrls(colorProduct.image_urls || []);
       } else {
-        // Thêm mới
         setFormData({ ...initialFormData, product_id: productId });
         setExistingImageUrls([]);
       }
-      // Reset trạng thái file khi modal mở
+      
       setSelectedFiles([]);
-      setImagePreviews([]); // Các objectURL cũ đã được revoke ở cleanup
+      setImagePreviews([]); 
       setErrors({});
       setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset file input
+        fileInputRef.current.value = ""; 
       }
     }
   }, [colorProduct, isOpen, productId]);
 
-  // Cleanup Object URLs khi component unmount hoặc imagePreviews thay đổi
+  
   useEffect(() => {
     return () => {
       imagePreviews.forEach(url => URL.revokeObjectURL(url));
@@ -99,7 +98,6 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
     setSelectedFiles(newSelectedFiles);
     setImagePreviews(newImagePreviews);
 
-    // Reset input để có thể chọn lại cùng file nếu lỡ xóa
     if (fileInputRef.current) {
         fileInputRef.current.value = ""; 
     }
@@ -109,7 +107,7 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
   };
 
   const removeNewImage = (indexToRemove) => {
-    URL.revokeObjectURL(imagePreviews[indexToRemove]); // Quan trọng: giải phóng bộ nhớ
+    URL.revokeObjectURL(imagePreviews[indexToRemove]); 
     setSelectedFiles(prev => prev.filter((_, index) => index !== indexToRemove));
     setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
   };
@@ -132,10 +130,7 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
     if (totalImageCount > MAX_IMAGES) {
         newErrors.image_urls = `Tối đa ${MAX_IMAGES} ảnh. Hiện tại có ${totalImageCount}.`;
     }
-    // Bỏ yêu cầu ít nhất 1 ảnh khi thêm mới nếu không muốn, tùy logic nghiệp vụ
-    // if (totalImageCount === 0 && !colorProduct) { // Nếu thêm mới và không có ảnh nào
-    //     newErrors.image_urls = 'Cần ít nhất 1 ảnh cho biến thể màu mới.';
-    // }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -150,28 +145,24 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
     try {
       if (selectedFiles.length > 0) {
         uploadedImageUrls = await uploadApiService.uploadMultipleProductImages(selectedFiles);
-        // toast.success(`Đã tải lên ${uploadedImageUrls.length} ảnh mới!`);
       }
 
       const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls];
 
       const dataToSubmit = {
-        ...formData, // name, description, product_id
+        ...formData, 
         price: formData.price.trim() ? parseFloat(formData.price) : null,
-        image_urls: finalImageUrls, // Gửi mảng URL cuối cùng
+        image_urls: finalImageUrls, 
       };
-      onSubmit(dataToSubmit); // Hàm này sẽ gọi API của colorProductApiService để tạo/cập nhật
+      onSubmit(dataToSubmit); 
 
     } catch (error) {
       console.error("Lỗi khi submit form (upload hoặc lưu biến thể):", error);
       toast.error(error.message || "Đã có lỗi xảy ra khi lưu biến thể màu.");
-      // Không reset isUploading ở đây nếu onSubmit thành công và đóng modal
     }
   };
   
   const handleClose = () => {
-    // imagePreviews đã được cleanup bởi useEffect.
-    // Không cần gọi lại URL.revokeObjectURL ở đây trừ khi muốn chắc chắn hơn.
     setFormData(initialFormData); 
     setExistingImageUrls([]);
     setSelectedFiles([]);
@@ -247,8 +238,8 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
             </label>
             <input
               type="file"
-              multiple // Cho phép chọn nhiều file
-              accept="image/*" // Chỉ chấp nhận file ảnh
+              multiple 
+              accept="image/*"
               onChange={handleFileChange}
               ref={fileInputRef}
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -259,17 +250,16 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
             )}
             {errors.image_urls && <p className="text-red-500 text-xs mt-1">{errors.image_urls}</p>}
 
-            {/* Previews */}
+            
             {(existingImageUrls.length > 0 || imagePreviews.length > 0) && (
               <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {/* Existing images */}
                 {existingImageUrls.map((url, index) => (
                   <div key={`existing-${index}-${url}`} className="relative group aspect-w-1 aspect-h-1">
                     <img 
                         src={url} 
                         alt={`Ảnh hiện tại ${index + 1}`} 
                         className="w-full h-full object-cover rounded-md border border-gray-300" 
-                        onError={(e) => { e.target.style.display='none'; /* Hoặc thay bằng placeholder */ }}
+                        onError={(e) => { e.target.style.display='none';}}
                     />
                     {!isUploading && (
                       <button
@@ -299,7 +289,6 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
                      )}
                   </div>
                 ))}
-                 {/* Placeholder for adding more images if not maxed out */}
                 {currentTotalImageCount < MAX_IMAGES && !isUploading && (
                     <label 
                         htmlFor="file-upload-trigger"
@@ -323,7 +312,7 @@ function ColorProductModal({ isOpen, onClose, onSubmit, colorProduct, productId 
             >Hủy</button>
             <button 
                 type="submit" 
-                disabled={isUploading || (currentTotalImageCount === 0 && !colorProduct && !selectedFiles.length)} // Vẫn cho phép submit nếu đang edit và xóa hết ảnh (nếu logic cho phép)
+                disabled={isUploading || (currentTotalImageCount === 0 && !colorProduct && !selectedFiles.length)} 
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center justify-center disabled:opacity-60"
             >
               {isUploading ? (
