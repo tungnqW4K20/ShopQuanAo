@@ -1,8 +1,6 @@
-// src/components/Products/ProductModal.js
 import React, { useState, useEffect, useRef } from 'react';
-import uploadApiService from '../../services/uploadApiService'; // Đảm bảo import đúng
+import uploadApiService from '../../services/uploadApiService';
 import { toast } from 'react-toastify';
-// 'react-toastify/dist/ReactToastify.css'; // CSS đã import ở ManageProducts hoặc App.js
 
 function ProductModal({ isOpen, onClose, onSubmit, product, categories = [] }) {
   const initialFormData = {
@@ -99,19 +97,19 @@ function ProductModal({ isOpen, onClose, onSubmit, product, categories = [] }) {
     e.preventDefault();
     if (!validate()) return;
 
-    let finalImageUrl = formData.image_url; // Giữ URL cũ nếu không có file mới
+    let finalImageUrl = formData.image_url;
 
-    if (selectedFile) { // Nếu người dùng chọn file mới
+    if (selectedFile) {
       setIsUploading(true);
       try {
         const uploadedImageUrl = await uploadApiService.uploadProductImage(selectedFile);
-        finalImageUrl = uploadedImageUrl; // Cập nhật URL mới
+        finalImageUrl = uploadedImageUrl;
         toast.success("Tải ảnh lên thành công!");
       } catch (error) {
         console.error("Upload error in modal:", error);
         toast.error(error.message || "Lỗi khi tải ảnh lên.");
         setIsUploading(false);
-        return; // Dừng nếu upload lỗi
+        return;
       } finally {
         setIsUploading(false);
       }

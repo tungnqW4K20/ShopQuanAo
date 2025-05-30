@@ -1,9 +1,7 @@
-// src/pages/ManageProducts.js (hoặc component tương tự)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import productApiService from '../services/productApiService'; // CRUD JSON
-// uploadApiService sẽ được dùng bên trong ProductModal
+import productApiService from '../services/productApiService';
 import ConfirmDeleteModal from '../components/Shared/ConfirmDeleteModal';
-import ProductModal from '../components/Products/ProductModal'; // Modal xử lý thêm/sửa
+import ProductModal from '../components/Products/ProductModal';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AiOutlinePlus } from 'react-icons/ai';
@@ -11,8 +9,7 @@ import { FaSearch } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ProductTable from '../components/Products/ProductTable';
-// Giả sử bạn có categoryApiService
-// import categoryApiService from '../services/categoryApiService';
+import categoryApiService from '../services/categoryApiService';
 
 
 function ManageProducts() {
@@ -20,24 +17,23 @@ function ManageProducts() {
   const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 1, currentPage: 1, pageSize: 10 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1); // Quản lý trang hiện tại
-  const [limit, setLimit] = useState(10); // Số lượng item mỗi trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null); // product để sửa, null để thêm
+  const [currentProduct, setCurrentProduct] = useState(null);
   const [categoriesForModal, setCategoriesForModal] = useState([]);
 
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
-  const { handleUnauthorized, logout } = useAuth(); // Lấy logout nếu cần
+  const { handleUnauthorized, logout } = useAuth();
   const navigate = useNavigate();
 
   const fetchProducts = useCallback(async (page = currentPage, search = searchTerm, pageSize = limit) => {
     setLoading(true);
     try {
-      // productApiService.getAllProducts giờ trả về { products: [], pagination: {} }
       const data = await productApiService.getAllProducts({ page, limit: pageSize, search });
       setProducts(data || []);
       setPagination(data.pagination || { totalItems: 0, totalPages: 1, currentPage: page, pageSize });
@@ -45,49 +41,40 @@ function ManageProducts() {
       console.error("Fetch products error in component:", err);
       toast.error(err.message || 'Không thể tải dữ liệu sản phẩm.');
       if (err.shouldLogout || err.status === 401) {
-        // handleUnauthorized(); // Nếu có hàm này
-        logout(); // Hoặc gọi logout trực tiếp
+        logout();
         navigate('/login');
       }
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, limit, logout, navigate]); // Thêm logout, navigate
+  }, [currentPage, searchTerm, limit, logout, navigate]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Fetch categories cho modal (chỉ ví dụ, bạn cần có service tương ứng)
   useEffect(() => {
     const fetchCategories = async () => {
         try {
-            // const cats = await categoryApiService.getAllCategoriesSimple(); // getAllCategoriesSimple chỉ trả về [{id, name}]
-            // setCategoriesForModal(cats || []);
-            // Giả lập categories nếu chưa có service:
-            setCategoriesForModal([
-                { id: 1, name: 'Electronics' },
-                { id: 2, name: 'Books' },
-                { id: 3, name: 'Clothing' },
-            ]);
+           const categories = await categoryApiService.getAllCategories();
+          const simplifiedCategories = categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+          }));
+          setCategoriesForModal(simplifiedCategories);
         } catch (error) {
             console.error("Error fetching categories for modal:", error);
             toast.error("Không thể tải danh mục.");
         }
     };
-    if (isModalOpen) { // Chỉ fetch khi modal mở
+    if (isModalOpen) {
         fetchCategories();
     }
   }, [isModalOpen]);
 
 
   const filteredProducts = useMemo(() => {
-    // Việc filter bằng searchTerm giờ đã được backend xử lý nếu bạn truyền `search` vào API
-    // Nếu API không hỗ trợ search, bạn có thể giữ lại logic filter ở client
-    // return products; // Nếu backend đã filter
-
-    // Giữ lại filter client nếu API chưa hỗ trợ:
-    if (!searchTerm.trim() && !products.some(p => !p.name)) { // Kiểm tra products có name không
+    if (!searchTerm.trim() && !products.some(p => !p.name)) {
         return products;
     }
     return products.filter(product =>
@@ -98,17 +85,16 @@ function ManageProducts() {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
-    // fetchProducts(1, event.target.value); // Fetch ngay khi search thay đổi
+    setCurrentPage(1);
   };
 
-  const handleSearchSubmit = (event) => { // Hoặc có nút search riêng
+  const handleSearchSubmit = (event) => {
     event.preventDefault();
     fetchProducts(1, searchTerm);
   }
 
   const handleOpenAddProductModal = () => {
-    setCurrentProduct(null); // Đặt là null để modal biết là thêm mới
+    setCurrentProduct(null);
     setIsModalOpen(true);
   };
 
