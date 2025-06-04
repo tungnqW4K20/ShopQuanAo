@@ -116,8 +116,29 @@ const getMyOrderById = async (req, res, next) => {
 };
 
 
+const getAllOrdersAdmin = async (req, res, next) => {
+    try {
+        const { page, limit } = req.query;
+        const result = await orderService.getAllOrders({ page, limit });
+
+        res.status(200).json({
+            success: true,
+            data: result.orders,
+            pagination: {
+                totalPages: result.totalPages,
+                currentPage: result.currentPage,
+                totalItems: result.totalOrders
+            }
+        });
+    } catch (error) {
+        console.error("Get All Orders Admin Controller Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy danh sách tất cả đơn hàng.' });
+    }
+};
+
 module.exports = {
     create,
     getMyOrders,
-    getMyOrderById
+    getMyOrderById,
+    getAllOrdersAdmin
 };

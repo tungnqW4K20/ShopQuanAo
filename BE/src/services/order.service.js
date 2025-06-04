@@ -4,6 +4,10 @@ const db = require('../models');
 const { sequelize, Customer, Product, ColorProduct, SizeProduct, Order, OrderDetail, Inventory } = db; 
 const { Op } = db.Sequelize;
 
+
+// Define allowed order statuses for validation
+const ALLOWED_ORDER_STATUSES = ['pending', 'processing', 'shipping', 'completed', 'cancelled'];
+
 const createOrder = async (orderData) => {
     const { customerId, items } = orderData;
 
@@ -195,9 +199,50 @@ const getOrderById = async (orderId, customerId = null) => {
     return order;
 };
 
+
+const getAllOrders = async (options = {}) => {
+    const page = parseInt(options.page, 10) || 1;
+    const limit = parseInt(options.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        const { count, rows } = await Order.findAndCountAll({
+            include: [
+                { model: Customer, as: 'customer', attributes: ['id', 'name', 'email'] }, 
+                {
+                    model: OrderDetail,
+                    as: 'orderDetails',
+                    include: [
+                        { model: Product, as: 'product', attributes: ['id', 'name', 'image_url'] },
+                        { model: ColorProduct, as: 'colorVariant', attributes: ['id', 'name'] },
+                        { model: SizeProduct, as: 'sizeVariant', attributes: ['id', 'name'] }
+                    ]
+                }
+            ],
+            order: [['orderdate', 'DESC']],
+            limit,
+            offset
+        });
+
+        return {
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            totalOrders: count,
+            orders: rows
+        };
+    } catch (error) {
+        console.error("Get All Orders Service Error:", error.message);
+        throw new Error('Lỗi khi lấy danh sách tất cả đơn hàng.');
+    }
+};
+
+
+
+
 module.exports = {
     createOrder,
     getOrdersByCustomerId,
-    getOrderById
+    getOrderById,
+    getAllOrders
 };
 
