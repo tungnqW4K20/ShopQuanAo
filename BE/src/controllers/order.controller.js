@@ -136,9 +136,59 @@ const getAllOrdersAdmin = async (req, res, next) => {
     }
 };
 
+const updateOrderStatusAdmin = async (req, res, next) => {
+    try {
+        const orderId = req.params.id;
+        const { status } = req.body; // 'status' ở đây là apiKey, vd: "processing"
+
+        if (isNaN(parseInt(orderId))) {
+            return res.status(400).json({ success: false, message: 'ID đơn hàng không hợp lệ.' });
+        }
+        if (!status || typeof status !== 'string') {
+            return res.status(400).json({ success: false, message: 'Trường "status" là bắt buộc và phải là một chuỗi.' });
+        }
+
+        const updatedOrder = await orderService.updateOrderStatus(parseInt(orderId), status);
+
+        res.status(200).json({
+            success: true,
+            message: 'Cập nhật trạng thái đơn hàng thành công!',
+            data: updatedOrder
+        });
+    } catch (error) {
+        console.error("Admin Update Order Status Controller Error:", error.message);
+        if (error.message.includes('Không tìm thấy')) {
+            return res.status(404).json({ success: false, message: error.message });
+        }
+        if (error.message.includes('không hợp lệ')) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        // Các lỗi khác do service ném ra (ví dụ: không thể chuyển trạng thái)
+        if (error.message.includes('Không thể chuyển trạng thái')) {
+             return res.status(409).json({ success: false, message: error.message }); // 409 Conflict
+        }
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi cập nhật trạng thái đơn hàng.' });
+    }
+};
+
+const getOrderStatusesAdmin = (req, res, next) => {
+    try {
+        const statuses = orderService.getAvailableOrderStatuses();
+        res.status(200).json({
+            success: true,
+            data: statuses
+        });
+    } catch (error) {
+        console.error("Admin Get Order Statuses Controller Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy danh sách trạng thái đơn hàng.' });
+    }
+};
+
 module.exports = {
     create,
     getMyOrders,
     getMyOrderById,
-    getAllOrdersAdmin
+    getAllOrdersAdmin,
+    updateOrderStatusAdmin,  
+    getOrderStatusesAdmin
 };

@@ -5,8 +5,43 @@ const { sequelize, Customer, Product, ColorProduct, SizeProduct, Order, OrderDet
 const { Op } = db.Sequelize;
 
 
-// Define allowed order statuses for validation
-const ALLOWED_ORDER_STATUSES = ['pending', 'processing', 'shipping', 'completed', 'cancelled'];
+// Lấy các giá trị ENUM trực tiếp từ model
+const ORDER_STATUS_MODEL_ENUM_VALUES = Order.rawAttributes.orderstatus.values; // Sẽ là ['0', '1', '2']
+
+// Ánh xạ từ khóa API (thân thiện với người dùng) sang giá trị ENUM trong model
+// API sẽ nhận đầu vào là các key này (vd: "pending", "processing")
+const ORDER_STATUS_API_MAP = {
+    pending: '0',
+    processing: '1',
+    confirmed: '1', // "confirmed" cũng có thể map tới '1'
+    shipped: '2',
+    completed: '2', // "completed" cũng có thể map tới '2'
+    cancelled: '2', // "cancelled" cũng có thể map tới '2'
+};
+
+// Mô tả cho từng trạng thái (lấy từ comment của model nếu có)
+const ORDER_STATUS_DESCRIPTIONS = {};
+const comment = Order.rawAttributes.orderstatus.comment; // "0: Pending, 1: Processing/Confirmed, 2: Shipped/Completed/Cancelled"
+if (comment) {
+    comment.split(',').forEach(part => {
+        const [key, ...valueParts] = part.trim().split(':');
+        if (key && valueParts.length > 0 && ORDER_STATUS_MODEL_ENUM_VALUES.includes(key.trim())) {
+            ORDER_STATUS_DESCRIPTIONS[key.trim()] = valueParts.join(':').trim();
+        }
+    });
+}
+// Fallback nếu comment không parse được hoặc không đủ chi tiết
+ORDER_STATUS_MODEL_ENUM_VALUES.forEach(value => {
+    if (!ORDER_STATUS_DESCRIPTIONS[value]) {
+        switch (value) {
+            case '0': ORDER_STATUS_DESCRIPTIONS[value] = 'Đang chờ xử lý'; break;
+            case '1': ORDER_STATUS_DESCRIPTIONS[value] = 'Đang xử lý/Đã xác nhận'; break;
+            case '2': ORDER_STATUS_DESCRIPTIONS[value] = 'Đã giao/Hoàn thành/Đã hủy'; break;
+            default: ORDER_STATUS_DESCRIPTIONS[value] = `Trạng thái ${value}`;
+        }
+    }
+});
+
 
 const createOrder = async (orderData) => {
     const { customerId, items } = orderData;
@@ -236,13 +271,50 @@ const getAllOrders = async (options = {}) => {
     }
 };
 
+const updateOrderStatus = async (orderId, newStatusApiKey) => {
+    const order = await Order.findByPk(orderId);
+    if (!order) {
+        throw new Error(`Không tìm thấy đơn hàng với ID ${orderId}.`);
+    }
 
+    // Chuyển newStatusApiKey (ví dụ: "processing") thành giá trị model (ví dụ: '1')
+    const modelStatusValue = ORDER_STATUS_API_MAP[newStatusApiKey.toLowerCase()];
+
+    if (!modelStatusValue || !ORDER_STATUS_MODEL_ENUM_VALUES.includes(modelStatusValue)) {
+        const validApiKeys = Object.keys(ORDER_STATUS_API_MAP).join(', ');
+        throw new Error(`Trạng thái '${newStatusApiKey}' không hợp lệ. Các trạng thái được chấp nhận: ${validApiKeys}.`);
+    }
+
+    
+
+    order.orderstatus = modelStatusValue;
+    await order.save();
+
+    
+    return getOrderById(orderId);
+};
+
+
+const getAvailableOrderStatuses = () => {
+    // Đảm bảo mỗi modelValue chỉ xuất hiện một lần
+    return ORDER_STATUS_MODEL_ENUM_VALUES.map(modelValue => {
+        // Tìm một apiKey tương ứng (có thể có nhiều apiKey map tới cùng 1 modelValue, chọn 1 cái)
+        const apiKey = Object.keys(ORDER_STATUS_API_MAP).find(key => ORDER_STATUS_API_MAP[key] === modelValue) || `status_val_${modelValue}`; // Fallback apiKey
+        return {
+            apiKey: apiKey, // Khóa dùng cho API
+            modelValue: modelValue, // Giá trị lưu trong DB
+            description: ORDER_STATUS_DESCRIPTIONS[modelValue] || `Trạng thái ${modelValue}` // Mô tả tiếng Việt
+        };
+    });
+};
 
 
 module.exports = {
     createOrder,
     getOrdersByCustomerId,
     getOrderById,
-    getAllOrders
+    getAllOrders,
+    updateOrderStatus,         
+    getAvailableOrderStatuses  
 };
 
