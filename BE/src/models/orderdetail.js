@@ -70,8 +70,13 @@ module.exports = (sequelize, DataTypes) => {
     price: { // Price of the item AT THE TIME of the order
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false // Price should be recorded when order is placed
-    }
-  }, {
+    },
+     image_url: {
+      type: DataTypes.STRING(500), // Increased length for potentially long URLs
+      allowNull: true
+    }, 
+  },
+  {
     sequelize,
     modelName: 'OrderDetail',
     tableName: 'ordersdetail', // Use original table name
