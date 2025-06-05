@@ -47,8 +47,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(500), // Increased length for potentially long URLs
       allowNull: true
     },
-
-
+    featured: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    }
   }, {
     sequelize,
     modelName: 'Product',

@@ -49,7 +49,11 @@ const createProduct = async (productData) => {
 };
 
 const getAllProducts = async (queryParams = {}) => {
-    const { limit, offset, categoryId, search } = queryParams;
+    let { limit, offset, categoryId, search, isFeatured } = queryParams;
+
+    if(!isFeatured) {
+        isFeatured = false;
+    }
 
     const options = {
         include: [{
@@ -60,6 +64,10 @@ const getAllProducts = async (queryParams = {}) => {
         where: {},
         order: [['createdAt', 'DESC']], 
     };
+
+    if (isFeatured === 'true' || isFeatured === true) {
+        options.where.featured = true;
+    }
 
     if (limit) options.limit = parseInt(limit);
     if (offset) options.offset = parseInt(offset);

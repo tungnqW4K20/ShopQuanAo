@@ -10,6 +10,8 @@ router.post('/', authenticateToken, authorizeRole("admin"), productController.cr
 
 router.get('/', productController.getAll);
 
+router.get('/get-paginate-featured', productController.getPaginateFeature);
+
 router.get('/:id', productController.getById);
 
 router.put('/:id', authenticateToken, authorizeRole("admin"), productController.update);

@@ -144,10 +144,38 @@ const deleteProductController = async (req, res, next) => {
     }
 };
 
+const getPaginateFeature = async (req, res, next) => {
+    try {
+        const { limit = 10, page = 1, categoryId, search } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        let isFeatured = true;
+        
+        const queryParams = { limit: parseInt(limit), offset, categoryId, search, isFeatured };
+
+        const { rows: products, count } = await productService.getAllProducts(queryParams);
+        
+        res.status(200).json({
+            success: true,
+            data: products,
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / parseInt(limit)),
+                currentPage: parseInt(page),
+                pageSize: parseInt(limit)
+            }
+        });
+    } catch (error) {
+        console.error("Get All Products Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy danh sách sản phẩm.' });
+    }
+};
+
 module.exports = {
     create,
     getAll,
     getById,
     update,
-    deleteProduct: deleteProductController 
+    deleteProduct: deleteProductController ,
+    getPaginateFeature
 };
