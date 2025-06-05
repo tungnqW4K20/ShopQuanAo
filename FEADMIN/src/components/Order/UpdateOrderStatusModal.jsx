@@ -1,37 +1,33 @@
-// src/components/Order/UpdateOrderStatusModal.jsx
 import React, { useState, useEffect } from 'react';
 
-function UpdateOrderStatusModal({ isOpen, onClose, onSubmit, order }) {
-  const [currentStatus, setCurrentStatus] = useState('');
+function UpdateOrderStatusModal({ isOpen, onClose, onSubmit, order, availableStatuses }) {
+  const [selectedStatusApiKey, setSelectedStatusApiKey] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (order) {
-      setCurrentStatus(order.orderstatus);
-    } else {
-      setCurrentStatus('');
+    if (isOpen && order && availableStatuses?.length > 0) {
+      // Find the apiKey corresponding to the order's current modelValue
+      const currentStatusObj = availableStatuses.find(s => s.modelValue === String(order.orderstatus));
+      setSelectedStatusApiKey(currentStatusObj?.apiKey || ''); // Set current status apiKey as default
+      setError('');
     }
-  }, [order, isOpen]);
+  }, [isOpen, order, availableStatuses]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (currentStatus === order?.orderstatus) {
-      onClose(); // Không có gì thay đổi
+    if (!selectedStatusApiKey) {
+      setError('Vui lòng chọn một trạng thái.');
       return;
     }
-    onSubmit(currentStatus);
+    onSubmit(order.id, selectedStatusApiKey);
   };
 
   const handleClose = () => {
+    setError('');
     onClose();
   };
 
   if (!isOpen || !order) return null;
-
-  const orderStatusOptions = [
-    { value: '0', label: 'Đang chờ xử lý' },
-    { value: '1', label: 'Đã xác nhận / Đang xử lý' },
-    { value: '2', label: 'Hoàn thành / Đã hủy' },
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out">
@@ -46,31 +42,35 @@ function UpdateOrderStatusModal({ isOpen, onClose, onSubmit, order }) {
             </label>
             <select
               id="orderStatus"
-              value={currentStatus}
-              onChange={(e) => setCurrentStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm"
-              required
+              value={selectedStatusApiKey}
+              onChange={(e) => {
+                setSelectedStatusApiKey(e.target.value);
+                if (error) setError('');
+              }}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${
+                error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'
+              } sm:text-sm`}
             >
-              <option value="" disabled>Chọn trạng thái</option>
-              {orderStatusOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
+              <option value="" disabled>Chọn trạng thái...</option>
+              {availableStatuses && availableStatuses.map(status => (
+                <option key={status.apiKey} value={status.apiKey}>
+                  {status.description} ({status.apiKey})
                 </option>
               ))}
             </select>
+            {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
           </div>
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out"
             >
               Hủy
             </button>
             <button
               type="submit"
-              disabled={currentStatus === order.orderstatus} // Disable nếu không thay đổi
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
             >
               Lưu thay đổi
             </button>

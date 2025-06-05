@@ -1,7 +1,6 @@
-// src/components/Order/OrderDetailView.jsx
 import React from 'react';
 
-function OrderDetailView({ order, loading, error }) { // Props loading và error sẽ từ component cha truyền vào nếu cần
+function OrderDetailView({ order, loading, error }) { 
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -28,7 +27,6 @@ function OrderDetailView({ order, loading, error }) { // Props loading và error
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numAmount);
   };
 
-  // Xử lý loading và error từ component cha (ví dụ: ManageOrdersPage hoặc ViewOrderPage)
   if (loading) {
     return <div className="text-center p-10">Đang tải chi tiết đơn hàng...</div>;
   }
@@ -37,19 +35,16 @@ function OrderDetailView({ order, loading, error }) { // Props loading và error
     return <div className="text-center p-10 text-red-500">Lỗi: {error}</div>;
   }
 
-  if (!order || Object.keys(order).length === 0) { // Kiểm tra order có dữ liệu không
+  if (!order || Object.keys(order).length === 0) { 
     return <div className="text-center p-10">Không có dữ liệu đơn hàng để hiển thị.</div>;
   }
   
-  // Tính tổng tiền. API của bạn có vẻ trả về total_amount trong service rồi,
-  // nhưng nếu không, chúng ta có thể tính lại ở đây.
   const totalAmount = order.total_amount !== undefined 
     ? order.total_amount
     : order.orderDetails?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
 
   return (
-    // ... (Phần JSX hiển thị giữ nguyên như trước) ...
-    <div className="bg-white shadow-xl rounded-lg p-6 md:p-8"> {/* Bỏ max-w-4xl mx-auto my-8 nếu dùng trong modal */}
+    <div className="bg-white shadow-xl rounded-lg p-6 md:p-8"> 
       <div className="flex flex-col sm:flex-row justify-between items-start mb-6 pb-4 border-b border-gray-200">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-indigo-700">Chi tiết Đơn hàng #{order.id}</h1>
@@ -68,7 +63,6 @@ function OrderDetailView({ order, loading, error }) { // Props loading và error
         </div>
       </div>
 
-      {/* Thông tin khách hàng */}
       <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-50 p-4 rounded-lg">
           <h2 className="text-lg font-semibold text-gray-700 mb-2">Thông tin Khách hàng</h2>
