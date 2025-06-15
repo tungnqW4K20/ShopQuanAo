@@ -3,16 +3,28 @@ import { Link } from 'react-router-dom';
 import { FiX, FiEye, FiEyeOff, FiGift, FiPercent, FiRefreshCw } from 'react-icons/fi';
 import { FcGoogle } from "@react-icons/all-files/fc/FcGoogle";
 import { FaFacebook } from "@react-icons/all-files/fa/FaFacebook";
+import { useAuth } from '../context/AuthContext';
 
 
 const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
-    const [email, setEmail] = useState('');
+    const [emailOrUsername, setEmailOrUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleLogin = (e) => {
+    const { login, loading } = useAuth();
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        console.log('Attempting login with:', { email, password });
+        setError('');
+        
+        try {
+            await login(emailOrUsername, password);
+            console.log('Đăng nhập thành công!');
+            onClose();
+        } catch (err) {
+            setError(err.message);
+        }
        
     };
 
@@ -38,20 +50,16 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
-            const firstInput = document.getElementById('login-email');
-            setTimeout(() => firstInput?.focus(), 2500);
-        } else {
-            
-            setEmail('');
+            setEmailOrUsername('');
             setPassword('');
             setShowPassword(false);
+            setError('');
         }
 
-        
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen, onClose]); 
+    }, [isOpen, onClose]);
 
     
     if (!isOpen) {
@@ -156,15 +164,15 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label htmlFor="login-email" className="sr-only">Email hoặc số điện thoại</label>
+                        <label htmlFor="login-emailOrUsername" className="sr-only">Email hoặc số điện thoại</label>
                         <input
-                            id="login-email"
-                            name="email" 
+                            id="login-emailOrUsername"
+                            name="emailOrUsername" 
                             type="text" 
                             inputMode="text"
                             placeholder="Email/SĐT của bạn"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={emailOrUsername}
+                            onChange={(e) => setEmailOrUsername(e.target.value)}
                             required
                             className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" // Using style from RegisterModal for consistency
                             autoComplete="username"
@@ -194,11 +202,38 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
                         </button>
                     </div>
 
+                    {error && (
+                        <p className="text-sm text-red-600 text-center">{error}</p>
+                    )}
+
                     <button
                         type="submit"
                         className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors" // Using style from RegisterModal button
+                        disabled={loading}
                     >
-                        ĐĂNG NHẬP
+                        {loading && (
+                            <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            >
+                            <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                            />
+                            <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                            </svg>
+                        )}
+                        {loading ? "Đang đăng nhập..." : "ĐĂNG NHẬP"}
                     </button>
                 </form>
 

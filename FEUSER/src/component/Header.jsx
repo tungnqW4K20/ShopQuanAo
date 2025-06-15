@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { FiSearch, FiUser, FiShoppingBag, FiMenu, FiX, FiStar } from 'react-icons/fi';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
+import { useAuth } from '../context/AuthContext';
 
 const DropdownLink = ({ to, children }) => (
   <Link to={to} className="block py-1 text-sm text-gray-700 hover:text-blue-600 hover:font-medium transition-colors">
@@ -225,6 +226,8 @@ const Header = () => {
   const [menuTimeoutId, setMenuTimeoutId] = useState(null);
   const [dropdownTimeoutId, setDropdownTimeoutId] = useState(null);
 
+  const { user, isAuthenticated, logout } = useAuth();
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -280,6 +283,10 @@ const Header = () => {
     setDropdownTimeoutId(timeoutId);
   };
 
+  const handleLogout = () => {
+    logout();
+  }
+
   const activeClassName = "text-blue-600 font-bold border-b-2 border-blue-600";
   const inactiveClassName = "border-b-2 border-transparent";
 
@@ -302,13 +309,25 @@ const Header = () => {
                <span className="text-gray-400">|</span>
               <Link to="/support" className="hover:text-gray-300 transition-colors">Trung tâm CSKH</Link>
                <span className="text-gray-400">|</span>
-              <button
-                type="button"
-                onClick={openLoginModal}
-                className="hover:text-gray-300 transition-colors focus:outline-none focus:text-gray-100"
-              >
-                Đăng nhập
-              </button>
+               {isAuthenticated && user ? 
+                  <div className='flex space-x-2'>
+                    <h1>Xin chào {user.name},</h1>
+                    <button
+                      className='cursor-pointer'
+                      onClick={handleLogout}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                :
+                  <button
+                    type="button"
+                    onClick={openLoginModal}
+                    className="hover:text-gray-300 transition-colors focus:outline-none focus:text-gray-100"
+                  >
+                    Đăng nhập
+                  </button>
+               }
             </div>
           </div>
         </div>
@@ -385,9 +404,11 @@ const Header = () => {
                   <FiSearch className="text-gray-400 w-4 h-4" />
                 </div>
               </div>
-              <Link to="/account" className="text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Tài khoản">
-                <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
-              </Link>
+              {isAuthenticated && 
+                <Link to="/account" className="text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Tài khoản">
+                  <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
+                </Link>
+              }
               <Link to="/cart" className="relative text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Giỏ hàng">
                 <FiShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center pointer-events-none">3</span>

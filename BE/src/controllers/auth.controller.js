@@ -48,6 +48,8 @@ const login = async (req, res, next) => {
 
         const loginData = { emailOrUsername, password };
         const result = await authService.loginCustomer(loginData);
+        // const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        // await delay(5000);
 
         res.status(200).json({
             success: true,
