@@ -67,3 +67,22 @@ export const getOrderStatusInfo = (statusValue, statusesArray = []) => {
     className: `${className} px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap`
   };
 };
+
+
+// src/utils/formatting.js
+
+
+
+export const getInvoiceStatusInfo = (status) => {
+  const baseClass = "px-2 py-1 text-xs font-semibold leading-tight rounded-full";
+  switch (String(status)) {
+    case '0':
+      return { text: 'Nháp', className: `${baseClass} text-yellow-700 bg-yellow-100` };
+    case '1':
+      return { text: 'Đã gửi', className: `${baseClass} text-blue-700 bg-blue-100` };
+    case '2':
+      return { text: 'Hoàn thành', className: `${baseClass} text-green-700 bg-green-100` };
+    default:
+      return { text: 'Không rõ', className: `${baseClass} text-gray-700 bg-gray-100` };
+  }
+};

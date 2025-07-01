@@ -10,6 +10,7 @@ const supplierRoutes = require('./routes/supplier.routes');
 const productRoutes = require('./routes/product.routes');
 const colorproductRoutes = require('./routes/colorproduct.routes');
 const sizeproductRoutes = require('./routes/sizeproduct.routes');
+const importRoutes = require('./routes/import.routes');
 
 const orderRoutes = require('./routes/order.routes');
 const uploadRoutes = require('./routes/upload.routes');
@@ -45,6 +46,7 @@ db.sequelize.authenticate()
     app.use('/api/size-products', sizeproductRoutes);
     app.use('/api/orders', orderRoutes);
     app.use('/api/uploads', uploadRoutes); // Mount the upload routes
+    app.use('/api/imports', importRoutes); // Mount the upload routes
 
     
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
