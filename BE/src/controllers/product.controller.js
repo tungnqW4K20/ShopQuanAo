@@ -171,11 +171,36 @@ const getPaginateFeature = async (req, res, next) => {
     }
 };
 
+
+
+const getVariants = async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        if (isNaN(parseInt(productId))) {
+            return res.status(400).json({ success: false, message: 'ID sản phẩm không hợp lệ.' });
+        }
+
+        const variants = await productService.getProductVariantsById(productId);
+        
+        res.status(200).json({
+            success: true,
+            data: variants
+        });
+    } catch (error) {
+        console.error("Get Product Variants Error:", error.message);
+        if (error.message.includes('Không tìm thấy')) {
+            return res.status(404).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy các biến thể của sản phẩm.' });
+    }
+};
+
 module.exports = {
     create,
     getAll,
     getById,
     update,
     deleteProduct: deleteProductController ,
-    getPaginateFeature
+    getPaginateFeature,
+    getVariants
 };

@@ -4,6 +4,8 @@
 const db = require('../models'); // Adjust path if necessary
 const Product = db.Product;
 const Category = db.Category; // For eager loading and validation
+const ColorProduct = db.ColorProduct;
+const SizeProduct = db.SizeProduct;
 const { Op } = db.Sequelize;
 
 /**
@@ -153,10 +155,41 @@ const deleteProduct = async (productId) => {
     await product.destroy(); 
 };
 
+
+
+const getProductVariantsById = async (productId) => {
+    // 1. Kiểm tra xem sản phẩm có tồn tại không
+    const productExists = await Product.findByPk(productId, { attributes: ['id'] });
+    if (!productExists) {
+        throw new Error(`Không tìm thấy sản phẩm với ID ${productId}.`);
+    }
+
+    // 2. Lấy đồng thời cả danh sách màu và size thuộc về sản phẩm đó
+    const [colors, sizes] = await Promise.all([
+        ColorProduct.findAll({
+            where: { product_id: productId },
+            attributes: ['id', 'name', 'price', 'image_urls'], // Chỉ lấy các trường cần thiết
+            order: [['createdAt', 'ASC']]
+        }),
+        SizeProduct.findAll({
+            where: { product_id: productId },
+            attributes: ['id', 'name', 'price'], // Chỉ lấy các trường cần thiết
+            order: [['createdAt', 'ASC']]
+        })
+    ]);
+
+    // 3. Trả về kết quả
+    return {
+        colors,
+        sizes
+    };
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
     getProductById,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getProductVariantsById
 };
