@@ -56,12 +56,22 @@ const deleteProduct = async (id) => {
   }
 };
 
+const getProductVariants = async (productId) => {
+  const response = await request({ method: 'get', url: `${API_ENDPOINT}/${productId}/variants` });
+  if (response && response.success) {
+    return response.data; // Should return { colors: [...], sizes: [...] }
+  } else {
+    throw new Error(response?.message || `Không thể lấy biến thể cho sản phẩm ID ${productId}.`);
+  }
+};
+
 const productApiService = {
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  getProductVariants
 };
 
 export default productApiService;

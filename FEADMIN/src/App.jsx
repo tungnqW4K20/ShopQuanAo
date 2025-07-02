@@ -13,6 +13,7 @@ import ManageProducts from './pages/ManageProducts';
 import ProductEditPage from './pages/ProductEditPage';
 import ManageOrdersPage from './pages/ManageOrdersPage';
 import ImportInvoiceManagement from './pages/ImportInvoiceManagement';
+import CreateImportInvoice from './pages/CreateImportInvoice';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
         <Route path="/admin/products/:productId/edit" element={<ProductEditPage />} /> 
         <Route path="manage/orders" element={<ManageOrdersPage />} />
         <Route path="manage/imports" element={<ImportInvoiceManagement />} />
+        <Route path="imports/new" element={<CreateImportInvoice />} />
 
       </Route>
 

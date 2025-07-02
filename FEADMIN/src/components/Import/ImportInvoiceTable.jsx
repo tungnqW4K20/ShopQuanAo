@@ -1,63 +1,61 @@
-// src/components/admin/ImportInvoiceTable.jsx
+// src/components/Import/ImportInvoiceTable.js
 import React from 'react';
-import { AiOutlineEye, AiOutlineCheckCircle } from 'react-icons/ai';
 import { formatDate, formatCurrency, getInvoiceStatusInfo } from '../../utils/formatting';
+// *** THÊM ICONS ***
+import { EyeIcon, CheckCircleIcon, PrinterIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 
-function ImportInvoiceTable({ invoices, onOpenDetails, onConfirmComplete, loading }) {
-  
-  if (loading) {
-    return (
-      <div className="text-center p-10 text-gray-500">
-        Đang tải danh sách hóa đơn...
-      </div>
-    );
-  }
+function ImportInvoiceTable({ invoices, loading, onOpenDetails, onConfirmComplete, onPrint, onExport }) {
+  // ... (Giao diện khi đang tải và khi không có dữ liệu giữ nguyên) ...
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left text-gray-500">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
           <tr>
-            <th scope="col" className="py-3 px-6">ID Hóa đơn</th>
-            <th scope="col" className="py-3 px-6">Nhà Cung Cấp</th>
-            <th scope="col" className="py-3 px-6">Ngày Nhập</th>
-            <th scope="col" className="py-3 px-6">Tổng tiền</th>
-            <th scope="col" className="py-3 px-6">Trạng thái</th>
-            <th scope="col" className="py-3 px-6 text-right">Hành động</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã HĐ</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nhà Cung Cấp</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày Nhập</th>
+            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng Tiền</th>
+            <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+            {/* *** THÊM CỘT HÀNH ĐỘNG *** */}
+            <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
           </tr>
         </thead>
-        <tbody>
-          {invoices.length === 0 ? (
-            <tr className="bg-white border-b">
-              <td colSpan="6" className="py-4 px-6 text-center text-gray-500">
-                Không tìm thấy hóa đơn nhập nào.
-              </td>
-            </tr>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {loading ? (
+            <tr><td colSpan="6" className="text-center py-4">Đang tải dữ liệu...</td></tr>
+          ) : invoices.length === 0 ? (
+            <tr><td colSpan="6" className="text-center py-4">Không tìm thấy hóa đơn nào.</td></tr>
           ) : (
-            invoices.map((invoice) => {
+            invoices.map(invoice => {
               const statusInfo = getInvoiceStatusInfo(invoice.import_status);
               return (
-                <tr key={invoice.id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="py-4 px-6 font-medium text-gray-900">#{invoice.id}</td>
-                  <td className="py-4 px-6">{invoice.supplier?.name || 'N/A'}</td>
-                  <td className="py-4 px-6">{formatDate(invoice.import_date)}</td>
-                  <td className="py-4 px-6 font-semibold">{formatCurrency(invoice.total_amount)}</td>
-                  <td className="py-4 px-6"><span className={statusInfo.className}>{statusInfo.text}</span></td>
-                  <td className="py-4 px-6 text-right space-x-2">
-                    <button
-                      onClick={() => onOpenDetails(invoice.id)}
-                      className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-100" title="Xem chi tiết"
-                    >
-                      <AiOutlineEye size={20} />
-                    </button>
-                    {String(invoice.import_status) === '0' && (
-                      <button
-                        onClick={() => onConfirmComplete(invoice.id)}
-                        className="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-100" title="Hoàn thành Hóa đơn"
-                      >
-                        <AiOutlineCheckCircle size={20} />
+                <tr key={invoice.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{invoice.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{invoice.supplier?.name || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(invoice.import_date)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right font-semibold">{formatCurrency(invoice.total_amount || 0)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <span className={statusInfo.className}>{statusInfo.text}</span>
+                  </td>
+                  {/* *** THÊM CÁC NÚT HÀNH ĐỘNG *** */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                    <div className="flex items-center justify-center space-x-2">
+                      <button onClick={() => onOpenDetails(invoice.id)} className="text-blue-600 hover:text-blue-900" title="Xem chi tiết">
+                        <EyeIcon className="h-5 w-5"/>
                       </button>
-                    )}
+                      {invoice.import_status === '0' && (
+                        <button onClick={() => onConfirmComplete(invoice.id)} className="text-green-600 hover:text-green-900" title="Hoàn thành hóa đơn">
+                          <CheckCircleIcon className="h-5 w-5"/>
+                        </button>
+                      )}
+                       <button onClick={() => onPrint(invoice.id)} className="text-gray-600 hover:text-gray-900" title="In hóa đơn">
+                        <PrinterIcon className="h-5 w-5"/>
+                      </button>
+                      <button onClick={() => onExport(invoice.id)} className="text-teal-600 hover:text-teal-900" title="Xuất Excel">
+                        <DocumentArrowDownIcon className="h-5 w-5"/>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
