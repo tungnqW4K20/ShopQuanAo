@@ -1,4 +1,3 @@
-// src/pages/DashboardPage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   ChartBarIcon,
@@ -7,14 +6,13 @@ import {
   UserGroupIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-// Area sẽ được dùng để tạo gradient
-import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import dashboardApiService from '../services/dashboardApiService';
 import { toast } from 'react-toastify';
+import { Link, useNavigate } from 'react-router-dom';
 
-// --- CÁC COMPONENT CON (KHÔNG THAY ĐỔI) ---
 
-const StatsCard = ({ icon: Icon, title, value, change, changeType, color, loading }) => {
+const StatsCard = ({ icon: Icon, title, value, change, color, loading }) => {
   const colorClasses = {
     blue: 'bg-blue-100 text-blue-600',
     green: 'bg-green-100 text-green-600',
@@ -49,12 +47,7 @@ const StatsCard = ({ icon: Icon, title, value, change, changeType, color, loadin
 };
 
 const OrderStatus = ({ status }) => {
-  const statusKey = {
-    '0': 'pending',
-    '1': 'shipping',
-    '2': 'completed',
-    '3': 'cancelled',
-  }[status];
+  const statusKey = { '0': 'pending', '1': 'shipping', '2': 'completed', '3': 'cancelled' };
   const statusInfo = {
     pending: { text: 'Chờ xử lý', class: 'bg-yellow-100 text-yellow-800' },
     shipping: { text: 'Đang giao', class: 'bg-blue-100 text-blue-800' },
@@ -65,7 +58,6 @@ const OrderStatus = ({ status }) => {
   return <span className={`px-2 py-1 text-xs font-medium rounded-full ${currentStatus.class}`}>{currentStatus.text}</span>;
 };
 
-// *** COMPONENT MỚI: TOOLTIP TÙY CHỈNH CHO BIỂU ĐỒ ***
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -97,8 +89,7 @@ function DashboardPage() {
     bestSellers: [],
     recentOrders: [],
   });
-
-  // --- LOGIC GỌI API VÀ XỬ LÝ DỮ LIỆU GIỮ NGUYÊN ---
+  
   const processData = useCallback((orders, customers) => {
     const validOrders = orders.filter(o => o.orderstatus !== '3');
     const totalRevenue = validOrders.reduce((sum, order) => sum + order.orderDetails.reduce((orderSum, item) => orderSum + (parseFloat(item.price) * item.quantity), 0), 0);
@@ -106,18 +97,15 @@ function DashboardPage() {
     const totalCustomers = customers.length;
     const mockVisitors = totalCustomers * 3 + totalOrders * 10;
     const conversionRate = mockVisitors > 0 ? (totalOrders / mockVisitors) * 100 : 0;
-    
     const salesByDay = {};
     validOrders.forEach(order => {
       const date = new Date(order.orderdate).toLocaleDateString('vi-VN');
       if (!salesByDay[date]) salesByDay[date] = 0;
       salesByDay[date] += order.orderDetails.reduce((orderSum, item) => orderSum + (parseFloat(item.price) * item.quantity), 0);
     });
-
     const salesChartData = Object.keys(salesByDay)
       .map(date => ({ name: date, DoanhThu: salesByDay[date] }))
       .sort((a, b) => new Date(a.name.split('/').reverse().join('-')) - new Date(b.name.split('/').reverse().join('-')));
-
     const productSales = {};
     validOrders.forEach(order => {
       order.orderDetails.forEach(item => {
@@ -128,7 +116,6 @@ function DashboardPage() {
         productSales[products_id].sales += quantity;
       });
     });
-
     const bestSellers = Object.values(productSales).sort((a, b) => b.sales - a.sales).slice(0, 4);
     const recentOrders = orders.sort((a, b) => new Date(b.orderdate) - new Date(a.orderdate)).slice(0, 5).map(order => ({
       id: `#CM${order.id}`,
@@ -136,7 +123,6 @@ function DashboardPage() {
       total: order.orderDetails.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
       status: order.orderstatus,
     }));
-
     return {
       stats: [
         { icon: CurrencyDollarIcon, title: 'Tổng doanh thu', value: `${new Intl.NumberFormat('vi-VN').format(totalRevenue)}đ`, change: 'Từ tất cả đơn hàng', color: 'blue' },
@@ -149,7 +135,8 @@ function DashboardPage() {
       recentOrders,
     };
   }, []);
-
+  
+  // Logic giữ nguyên
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -181,7 +168,6 @@ function DashboardPage() {
     );
   }
 
-  // --- PHẦN GIAO DIỆN CHÍNH (CÓ CÁC THAY ĐỔI TRONG BIỂU ĐỒ) ---
   return (
     <div className="bg-gray-50/50 p-4 sm:p-6 lg:p-8 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -197,70 +183,45 @@ function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Biểu đồ (không thay đổi) */}
           <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Biểu đồ doanh thu theo ngày</h2>
             <div className="h-80">
                 {loading ? <div className="h-full bg-gray-200 rounded-lg animate-pulse"></div> : (
                     <ResponsiveContainer width="100%" height="100%">
-                        {/* *** THAY ĐỔI TỪ LineChart -> AreaChart ĐỂ CÓ NỀN *** */}
                         <AreaChart data={dashboardData.salesChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                            {/* Định nghĩa Gradient để tô màu cho vùng Area */}
-                            <defs>
-                                <linearGradient id="colorDoanhThu" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
-                                </linearGradient>
-                            </defs>
-
-                            {/* Lưới ngang, bỏ lưới dọc để thoáng hơn */}
+                            <defs><linearGradient id="colorDoanhThu" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#2563EB" stopOpacity={0.8}/><stop offset="95%" stopColor="#2563EB" stopOpacity={0}/></linearGradient></defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-
-                            {/* Trục X, bỏ đường kẻ trục và đường tick */}
-                            <XAxis 
-                                dataKey="name" 
-                                tick={{ fontSize: 12, fill: '#6B7280' }} 
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            
-                            {/* Trục Y, bỏ đường kẻ trục và đường tick */}
-                            <YAxis 
-                                tickFormatter={(value) => `${(value / 1_000_000).toFixed(1)}tr`} 
-                                tick={{ fontSize: 12, fill: '#6B7280' }}
-                                axisLine={false}
-                                tickLine={false}
-                                width={40}
-                            />
-                            
-                            {/* Sử dụng Tooltip tùy chỉnh đã tạo */}
+                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false}/>
+                            <YAxis tickFormatter={(value) => `${(value / 1_000_000).toFixed(1)}tr`} tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} width={40}/>
                             <Tooltip content={<CustomTooltip />} />
-                            
-                            {/* Component Area để vẽ vùng gradient */}
                             <Area type="monotone" dataKey="DoanhThu" stroke="#2563EB" fillOpacity={1} fill="url(#colorDoanhThu)" />
-                            
-                            {/* Component Line vẫn được vẽ đè lên trên để có đường kẻ đậm */}
-                            <Line 
-                                type="monotone" 
-                                dataKey="DoanhThu" 
-                                stroke="#2563EB" 
-                                strokeWidth={3}
-                                dot={false} // Ẩn các chấm tròn mặc định
-                                activeDot={{ r: 7, stroke: '#2563EB', strokeWidth: 2, fill: '#fff' }} // Tùy chỉnh chấm tròn khi hover
-                            />
+                            <Area type="monotone" dataKey="DoanhThu" stroke="#2563EB" strokeWidth={3} dot={false} activeDot={{ r: 7, stroke: '#2563EB', strokeWidth: 2, fill: '#fff' }}/>
                         </AreaChart>
                     </ResponsiveContainer>
                 )}
             </div>
           </div>
           
-          {/* Các phần còn lại của Dashboard không thay đổi */}
+          {/* *** THAY ĐỔI 2: CẬP NHẬT PHẦN SẢN PHẨM BÁN CHẠY *** */}
           <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Sản phẩm bán chạy nhất</h2>
-            <ul className="space-y-4">
+            <ul className="space-y-1"> {/* Giảm space-y để Link có padding riêng */}
               {loading ? Array(4).fill(0).map((_, i) => (
-                <li key={i} className="flex items-center space-x-4 animate-pulse"><div className="w-16 h-16 bg-gray-200 rounded-md"></div><div className="flex-1 space-y-2"><div className="h-4 bg-gray-200 rounded w-full"></div><div className="h-3 bg-gray-200 rounded w-1/2"></div></div></li>
+                <li key={i} className="flex items-center space-x-4 p-2 animate-pulse"><div className="w-16 h-16 bg-gray-200 rounded-md"></div><div className="flex-1 space-y-2"><div className="h-4 bg-gray-200 rounded w-full"></div><div className="h-3 bg-gray-200 rounded w-1/2"></div></div></li>
               )) : dashboardData.bestSellers.map((product) => (
-                <li key={product.id} className="flex items-center space-x-4"><img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded-md bg-gray-100" /><div className="flex-1"><p className="font-semibold text-sm text-gray-800">{product.name}</p></div><p className="font-bold text-sm text-blue-600">{product.sales} sp</p></li>
+                <li key={product.id}>
+                  <Link 
+                    to={`/admin/products/${product.id}/edit`} 
+                    className="flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                  >
+                    <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded-md bg-gray-100" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-gray-800 line-clamp-2">{product.name}</p>
+                    </div>
+                    <p className="font-bold text-sm text-blue-600">{product.sales} sp</p>
+                  </Link>
+                </li>
               ))}
             </ul>
           </div>
