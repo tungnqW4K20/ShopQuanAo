@@ -15,6 +15,8 @@ const importRoutes = require('./routes/import.routes');
 const orderRoutes = require('./routes/order.routes');
 const uploadRoutes = require('./routes/upload.routes');
 
+const commentRoutes = require('./routes/comment.routes');
+
 
 
 const app = express();
@@ -47,6 +49,7 @@ db.sequelize.authenticate()
     app.use('/api/orders', orderRoutes);
     app.use('/api/uploads', uploadRoutes); // Mount the upload routes
     app.use('/api/imports', importRoutes); // Mount the upload routes
+    app.use('/api/comments', commentRoutes); // Mount the upload routes
 
     
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)
