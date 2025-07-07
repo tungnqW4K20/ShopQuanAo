@@ -195,6 +195,33 @@ const getVariants = async (req, res, next) => {
     }
 };
 
+
+const getDetailsById = async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        if (isNaN(parseInt(productId))) {
+            return res.status(400).json({ success: false, message: 'ID sản phẩm không hợp lệ.' });
+        }
+
+        const productDetails = await productService.getFullProductDetailsById(productId);
+        
+        res.status(200).json({
+            success: true,
+            data: productDetails
+        });
+    } catch (error) {
+        console.error("Get Product Details Error:", error.message);
+        if (error.message.includes('Không tìm thấy')) {
+            return res.status(404).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy chi tiết sản phẩm.' });
+    }
+};
+
+
+
+
+
 module.exports = {
     create,
     getAll,
@@ -202,5 +229,6 @@ module.exports = {
     update,
     deleteProduct: deleteProductController ,
     getPaginateFeature,
-    getVariants
+    getVariants,
+    getDetailsById
 };

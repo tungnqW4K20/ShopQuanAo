@@ -20,4 +20,6 @@ router.delete('/:id', authenticateToken, authorizeRole("admin"), productControll
 
 router.get('/:id/variants', productController.getVariants);
 
+router.get('/:id/details', productController.getDetailsById);
+
 module.exports = router;

@@ -24,7 +24,7 @@ const ProductCard = ({ product }) => {
   return (
     <div className="flex-shrink-0 w-48 sm:w-56 md:w-60 group">
       <div className="relative overflow-hidden rounded-lg bg-gray-100 mb-3">
-        <Link to={link || `/product/${id}`} className="block aspect-[3/4]">
+        <Link to={`/products/${id}`} className="block aspect-[3/4]">
           <img
             src={imageUrl}
             alt={name}
@@ -46,6 +46,7 @@ const ProductCard = ({ product }) => {
         )}
       </div>
 
+
       {/* Color Swatches */}
       {colors && colors.length > 0 && (
         <div className="flex space-x-1.5 mb-2 justify-start">
@@ -64,7 +65,7 @@ const ProductCard = ({ product }) => {
 
       {/* Product Name */}
       <h3 className="text-sm font-normal text-gray-800 mb-1 group-hover:text-blue-700 transition-colors">
-        <Link to={link || `/product/${id}`} className="line-clamp-2">
+        <Link to={`/products/${id}`} className="line-clamp-2">
             {name}
         </Link>
       </h3>
@@ -84,5 +85,6 @@ const ProductCard = ({ product }) => {
     </div>
   );
 };
+
 
 export default ProductCard;

@@ -185,11 +185,50 @@ const getProductVariantsById = async (productId) => {
     };
 };
 
+
+const getFullProductDetailsById = async (productId) => {
+    const product = await Product.findByPk(productId, {
+        // Sử dụng "include" để lấy dữ liệu từ các bảng liên quan
+        include: [
+            {
+                model: Category,
+                as: 'category',
+                attributes: ['id', 'name'] // Chỉ lấy các trường cần thiết của Category
+            },
+            {
+                model: ColorProduct,
+                as: 'colorOptions', // Phải khớp với alias trong model Product
+                attributes: ['id', 'name', 'price', 'image_urls' , 'colorCode' ], // Lấy các trường cần thiết, bao gồm cả ảnh của màu
+                order: [['createdAt', 'ASC']],
+            },
+            {
+                model: SizeProduct,
+                as: 'sizeOptions', // Phải khớp với alias trong model Product
+                attributes: ['id', 'name', 'price'], // Lấy các trường cần thiết của Size
+                order: [['createdAt', 'ASC']],
+            }
+        ],
+        // Loại bỏ các trường không cần thiết từ model Product chính
+        attributes: {
+            exclude: ['updatedAt', 'deletedAt']
+        }
+    });
+
+    if (!product) {
+        throw new Error(`Không tìm thấy sản phẩm với ID ${productId}.`);
+    }
+
+    return product;
+};
+
+
+
 module.exports = {
     createProduct,
     getAllProducts,
     getProductById,
     updateProduct,
     deleteProduct,
-    getProductVariantsById
+    getProductVariantsById,
+    getFullProductDetailsById
 };

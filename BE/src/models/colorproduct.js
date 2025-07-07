@@ -69,8 +69,16 @@ module.exports = (sequelize, DataTypes) => {
           }
         }
       },
-    }
-  }, {
+    },
+    colorCode: {
+      field: 'color_code', // Tên cột trong CSDL
+      type: DataTypes.STRING(50),
+      allowNull: true, // Cho phép null nếu mã màu không phải lúc nào cũng có
+      comment: "The hex or rgb code for the color, e.g., '#FFFFFF' or 'rgb(255,0,0)'."
+    },
+  },
+   
+  {
     sequelize,
     modelName: 'ColorProduct',
     tableName: 'color_products',

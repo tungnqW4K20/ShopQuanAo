@@ -14,6 +14,8 @@ import ProductEditPage from './pages/ProductEditPage';
 import ManageOrdersPage from './pages/ManageOrdersPage';
 import ImportInvoiceManagement from './pages/ImportInvoiceManagement';
 import CreateImportInvoice from './pages/CreateImportInvoice';
+import ManageProductComments from './pages/ManageProductComments';
+import TODOAPP from './pages/TODOAPP';
 
 function App() {
   return (
@@ -44,6 +46,8 @@ function App() {
         <Route path="manage/orders" element={<ManageOrdersPage />} />
         <Route path="manage/imports" element={<ImportInvoiceManagement />} />
         <Route path="imports/new" element={<CreateImportInvoice />} />
+        <Route path="/admin/products/:productId/comments" element={<ManageProductComments />} />
+        <Route path="/todoapp" element={<TODOAPP />} />
 
       </Route>
 
@@ -54,3 +58,6 @@ function App() {
 }
 
 export default App;
+
+
+

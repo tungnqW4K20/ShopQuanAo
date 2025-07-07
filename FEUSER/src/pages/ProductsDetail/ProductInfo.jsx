@@ -48,6 +48,8 @@ const ProductInfo = ({
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
 
+  console.log("-----------", product);
+
   return (
     <div className="w-full lg:w-1/2 lg:pl-8 xl:pl-12 mt-6 lg:mt-0">
       {/* ... (Title, Rating, Price, Freeship, Vouchers, Color Selection - unchanged) ... */}
@@ -103,7 +105,7 @@ const ProductInfo = ({
               ))}
           </div>
         </div>
-
+              
         {/* Color Selection */}
         <div className="mt-6">
           <h3 className="text-sm font-medium text-gray-900">
@@ -120,16 +122,15 @@ const ProductInfo = ({
                     ? 'ring-2 ring-indigo-500 border-indigo-500'
                     : 'border-gray-300 hover:border-gray-500 hover:ring-1 hover:ring-gray-400'
                 }`}
-                style={color.hex === '#FFFFFF' ? { boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.1)' } : {}}
               >
                 <span
-                    style={{ backgroundColor: color.hex }}
-                    className="h-full w-full block rounded-full"
-                    aria-hidden="true"
+                  style={{ backgroundColor: color.colorCode }}
+                  className="h-full w-full block rounded-full"
+                  aria-hidden="true"
                 ></span>
                 {selectedColor?.hex === color.hex && (
                   <span className="absolute inset-0 flex items-center justify-center">
-                      <CheckCircleIcon className="h-4 w-4 text-white mix-blend-difference pointer-events-none" />
+                    <CheckCircleIcon className="h-4 w-4 text-white mix-blend-difference pointer-events-none" />
                   </span>
                 )}
               </button>

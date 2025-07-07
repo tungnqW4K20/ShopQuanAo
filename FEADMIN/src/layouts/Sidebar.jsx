@@ -77,14 +77,14 @@ function Sidebar() {
           <TbReceipt2 className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Hóa đơn Nhập
         </NavLink>
-        <NavLink to="/manage/impacts" className={getNavLinkClass}>
+        <NavLink to="product/comments" className={getNavLinkClass}>
           <MdOutlineRateReview className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Bình luận
         </NavLink>
 
         <div className="border-t border-slate-700/60">
         <nav className="flex flex-col space-y-1.5">
-            <NavLink to="/reports/revenue" className={getNavLinkClass}>
+            <NavLink to="/todoapp" className={getNavLinkClass}>
                 <HiOutlineChartPie className="w-5 h-5 mr-3 flex-shrink-0" />
                 Báo cáo Doanh thu
             </NavLink>

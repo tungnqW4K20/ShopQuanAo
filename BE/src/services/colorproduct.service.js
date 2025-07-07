@@ -8,7 +8,7 @@ const { Op } = db.Sequelize;
 
 
 const createColorProduct = async (colorProductData) => {
-    const { product_id, name, price, description, image_urls } = colorProductData;
+    const { product_id, name, price, description, image_urls, colorCode } = colorProductData;
 
     if (!product_id || !name) {
         throw new Error('Product ID và Tên màu là bắt buộc.');
@@ -35,7 +35,8 @@ const createColorProduct = async (colorProductData) => {
         name,
         price,
         description,
-        image_urls 
+        image_urls,
+        colorCode 
     });
     return newColorProduct;
 };
@@ -75,14 +76,14 @@ const updateColorProduct = async (colorProductId, updateData) => {
         throw new Error(`Không tìm thấy biến thể màu sắc sản phẩm với ID ${colorProductId} để cập nhật.`);
     }
 
-    const { name, price, description, image_urls } = updateData;
+    const { name, price, description, image_urls, colorCode } = updateData;
 
     if (name && name !== colorProduct.name) {
         const existingVariantWithNewName = await ColorProduct.findOne({
             where: {
                 product_id: colorProduct.product_id,
                 name: name,
-                id: { [Op.ne]: colorProductId } 
+                id: { [Op.ne]: colorProductId }, 
             }
         });
         if (existingVariantWithNewName) {
@@ -94,6 +95,7 @@ const updateColorProduct = async (colorProductId, updateData) => {
     if (price !== undefined) colorProduct.price = price;
     if (description !== undefined) colorProduct.description = description;
     if (image_urls !== undefined) colorProduct.image_urls = image_urls;
+    if ( colorCode !== undefined) colorProduct.colorCode = colorCode;
 
     await colorProduct.save();
     return colorProduct.reload({

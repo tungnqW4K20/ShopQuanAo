@@ -8,7 +8,7 @@ const create = async (req, res) => {
     try {
        
         const product_id = req.params.productId || req.body.product_id;
-        const { name, price, description, image_urls } = req.body;
+        const { name, price, description, image_urls, colorCode } = req.body;
 
         if (!product_id) {
              return res.status(400).json({ success: false, message: 'Thiếu Product ID của sản phẩm gốc.' });
@@ -22,7 +22,8 @@ const create = async (req, res) => {
             name,
             price,
             description,
-            image_urls
+            image_urls,
+            colorCode
         };
         const newColorProduct = await colorProductService.createColorProduct(data);
 
