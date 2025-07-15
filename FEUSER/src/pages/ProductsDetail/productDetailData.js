@@ -1,5 +1,3 @@
-// src/productDetailData.js
-
 export const product = {
     id: 'polo-pique-cotton-01',
     name: 'Áo Polo Nam Pique Cotton',
@@ -7,7 +5,7 @@ export const product = {
     breadcrumbs: [
       { name: 'Trang chủ', href: '#' },
       { name: 'Đồ Nam', href: '#' },
-      { name: 'Áo Polo Nam', href: '#' }, // Current page - not a link
+      { name: 'Áo Polo Nam', href: '#' }, 
     ],
     images: [
       { id: 1, src: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/December2024/polo-pique-basic-cotton-103-nau-dam_(7).png', alt: 'Áo Polo Nâu - Chính' },
@@ -16,7 +14,6 @@ export const product = {
       { id: 4, src: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/December2024/polo-pique-basic-cotton-103-nau-dam_(3).jpg', alt: 'Áo Polo Nâu - Thumb 3' },
       { id: 5, src: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/December2024/polo-pique-basic-cotton-103-nau-dam_(5).jpg', alt: 'Áo Polo Nâu - Thumb 4' },
       { id: 6, src: 'https://media3.coolmate.me/cdn-cgi/image/quality=80,format=auto/uploads/December2024/polo-pique-basic-cotton-103-nau-dam_(6).jpg', alt: 'Áo Polo Nâu - Thumb 5' },
-      // Add images for other colors if needed, or handle dynamically
     ],
     rating: 4.8,
     reviewCount: 274,
@@ -61,7 +58,7 @@ export const product = {
           { label: 'TÍNH NĂNG', value: 'Kiểu dệt Pique giúp áo thoáng mát\nXử lý hoàn thiện giúp ít xù lông' },
       ],
       proudlyMadeIn: 'Proudly Made In Vietnam',
-      sections: [ // Example structure for description content
+      sections: [ 
           { type: 'image', src: 'https://mcdn.coolmate.me//image/March2025/ao-polo-nam-pique-cotton-thumb-1.png', alt: 'Polo description image 1'},
           { type: 'heading', text: 'Đặc điểm nổi bật Áo polo nam Pique Cotton'},
           { type: 'subheading', text: '1. Chất liệu Cotton cao cấp'},
@@ -69,18 +66,16 @@ export const product = {
           { type: 'link', text: 'Tìm hiểu thêm về cotton tại đây? Những điều bạn cần biết về vải Cotton', href:'#'},
           { type: 'image', src: 'https://mcdn.coolmate.me/image/August2023/mceclip0_66.jpg', alt: 'Polo description image 2 - Ready to wear'},
           { type: 'heading', text: 'CHẤT LIỆU COTTON'},
-          // ... more description sections
       ],
       stylingTips: {
           title: 'Cách phối đồ Áo polo nam Pique Cotton',
           items: [
               'Áo polo pique cotton + Quần tây Âu/Quần kaki + Giày tây/Giày lười',
-              // ... other tips
           ]
       }
     },
-    relatedProducts: [ /* Array of product IDs or simplified product objects from data.js */ ],
-    reviews: { /* Review data structure */ },
-    recentlyViewed: [ /* Array of product IDs or simplified product objects from data.js */ ],
+    relatedProducts: [  ],
+    reviews: {  },
+    recentlyViewed: [  ],
     offerBannerImage: 'https://media3.coolmate.me/cdn-cgi/image/width=713,height=1050,quality=85,format=auto/uploads/May2025/footer_voucher_555.jpg'
   };

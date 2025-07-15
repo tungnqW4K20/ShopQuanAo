@@ -164,12 +164,16 @@ const Slider = () => {
           </button>
         </>
       )}
-
-      <style jsx global>{`
-        .text-shadow {
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-        }
-      `}</style>
+      
+      {/* --- SỬA LỖI Ở ĐÂY --- */}
+      {/* Thay thế <style jsx global> bằng thẻ <style> thông thường */}
+      <style>
+        {`
+          .text-shadow {
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+          }
+        `}
+      </style>
     </div>
   );
 };

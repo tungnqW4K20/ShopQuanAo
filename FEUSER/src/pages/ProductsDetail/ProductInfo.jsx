@@ -1,10 +1,9 @@
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from 'react'; 
 import { StarIcon, ShareIcon, CheckCircleIcon, ChatBubbleLeftRightIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
-// Adjust path for QuantitySelector and SizeGuideModal as needed
 import QuantitySelector from './QuantitySelector';
-import SizeGuideModal from './SizeGuideModal'; // Import the modal
+import SizeGuideModal from './SizeGuideModal'; 
 
-// Helper function (same as before)
+
 const formatPrice = (value) => {
   if (value === null || value === undefined) return '';
   return value.toLocaleString('vi-VN') + 'đ';
@@ -33,15 +32,12 @@ const ProductInfo = ({
     availableSizes = [],
     policies = [],
     detailedPolicies = [],
-    // Add sizeChart if needed by the modal, or manage data within the modal
   } = product;
 
-  // --- State for Size Guide Modal ---
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   const openSizeGuide = () => setIsSizeGuideOpen(true);
   const closeSizeGuide = () => setIsSizeGuideOpen(false);
-  // --- End State ---
 
 
   const discountPercent = originalPrice && price < originalPrice
@@ -142,20 +138,16 @@ const ProductInfo = ({
             )}
           </div>
         </div>
-        {/* End of Color Selection */}
 
-       {/* Size Selection */}
       <div className="mt-6">
          <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-900">Kích thước áo:</h3>
-            {/* --- UPDATED LINK TO BUTTON --- */}
             <button
                 onClick={openSizeGuide}
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-500 hover:underline focus:outline-none"
             >
               Hướng dẫn chọn size
             </button>
-            {/* --- END UPDATE --- */}
           </div>
           <div className="mt-2 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
              {availableSizes.map((size) => (
@@ -216,16 +208,13 @@ const ProductInfo = ({
         </div>
 
 
-      {/* --- Render Modal Conditionally --- */}
       {isSizeGuideOpen && (
         <SizeGuideModal
           onClose={closeSizeGuide}
-          // Pass size chart data if needed: sizeChart={product.sizeChart}
         />
       )}
-      {/* --- End Modal --- */}
 
-    </div> // End ProductInfo container
+    </div> 
   );
 };
 

@@ -17,6 +17,9 @@ const uploadRoutes = require('./routes/upload.routes');
 
 const commentRoutes = require('./routes/comment.routes');
 
+const cartRoutes = require('./routes/cart.routes');
+
+
 
 
 const app = express();
@@ -33,7 +36,7 @@ db.sequelize.authenticate()
     console.log('Kết nối MySQL thành công!');
     // return db.sequelize.sync({ alter: true }); // Dùng alter hoặc không sync ở đây nếu dùng migrations
     return db.sequelize.sync(); // Đồng bộ để tạo bảng nếu chưa có
-     //return db.sequelize.sync({ alter: true }); // thay đổi cấu trúc bảng
+    //  return db.sequelize.sync({ alter: true }); // thay đổi cấu trúc bảng
   })
   .then(() => {
     console.log('Đồng bộ bảng thành công!');
@@ -50,6 +53,7 @@ db.sequelize.authenticate()
     app.use('/api/uploads', uploadRoutes); // Mount the upload routes
     app.use('/api/imports', importRoutes); // Mount the upload routes
     app.use('/api/comments', commentRoutes); // Mount the upload routes
+    app.use('/api/carts', cartRoutes); // Mount the upload routes
 
     
     // Ví dụ về route được bảo vệ (sẽ tạo middleware sau)

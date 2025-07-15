@@ -22,7 +22,6 @@ const bannerData = [
 
 const DualBanner = () => {
   return (
-    // Removed py-* and added pb-* to remove top padding/margin
     <div className="container mx-auto px-8 pb-8 sm:pb-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         {bannerData.map((banner) => (
@@ -57,10 +56,13 @@ const DualBanner = () => {
           </div>
         ))}
       </div>
-      <style jsx global>{`
-        .text-shadow { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); }
-        .text-shadow-sm { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
-      `}</style>
+
+      <style>
+        {`
+          .text-shadow { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); }
+          .text-shadow-sm { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+        `}
+      </style>
     </div>
   );
 };

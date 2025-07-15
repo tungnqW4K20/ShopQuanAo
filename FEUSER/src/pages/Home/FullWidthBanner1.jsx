@@ -54,7 +54,8 @@ const FullWidthBanner1 = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      {/* --- SỬA LỖI Ở ĐÂY --- */}
+      <style>{`
         .text-shadow { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
         .text-shadow-sm { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
 
