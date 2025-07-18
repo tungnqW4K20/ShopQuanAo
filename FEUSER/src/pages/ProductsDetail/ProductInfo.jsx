@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StarIcon, ShareIcon, CheckCircleIcon, ChatBubbleLeftRightIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import QuantitySelector from './QuantitySelector';
 import SizeGuideModal from './SizeGuideModal'; 
+import { Link } from 'react-router-dom';
 
 
 const formatPrice = (value) => {
@@ -166,15 +167,15 @@ const ProductInfo = ({
           </div>
       </div>
 
-      {/* ... (Quantity, Add to Cart, Policies - unchanged) ... */}
-       {/* Quantity & Add to Cart */}
+      
       <div className="mt-8 flex items-center gap-4">
          <QuantitySelector
            quantity={quantity}
            onDecrease={() => onQuantityChange(quantity - 1)}
            onIncrease={() => onQuantityChange(quantity + 1)}
          />
-         <button
+         <Link to = {`/carts/${id}`}>
+         <button 
            type="button"
            onClick={onAddToCart}
            disabled={!selectedSize || !selectedColor}
@@ -182,6 +183,7 @@ const ProductInfo = ({
          >
            {!selectedColor || !selectedSize ? 'Chọn màu & kích thước' : `Thêm vào giỏ hàng`}
          </button>
+         </Link>
       </div>
 
       {/* Policy Snippets */}

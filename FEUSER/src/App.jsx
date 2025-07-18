@@ -15,7 +15,6 @@ import BlogPage from './pages/Blog/BlogPage'
 
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
