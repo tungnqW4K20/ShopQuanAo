@@ -1,4 +1,3 @@
-// src/components/QuantitySelector.jsx
 import React from 'react';
 import { MinusIcon, PlusIcon } from '@heroicons/react/20/solid';
 
