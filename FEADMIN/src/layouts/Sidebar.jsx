@@ -77,7 +77,7 @@ function Sidebar() {
           <TbReceipt2 className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Hóa đơn Nhập
         </NavLink>
-        <NavLink to="product/comments" className={getNavLinkClass}>
+        <NavLink to="/admin/products/comments" className={getNavLinkClass}>
           <MdOutlineRateReview className="w-5 h-5 mr-3 flex-shrink-0" />
           Quản lý Bình luận
         </NavLink>

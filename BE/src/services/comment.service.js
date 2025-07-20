@@ -3,24 +3,17 @@
 const db = require('../models');
 const { Comment, Customer, Product } = db;
 
-/**
- * Lấy tất cả bình luận (và các câu trả lời) cho một sản phẩm.
- * Các bình luận được sắp xếp theo cấu trúc cây (cha-con).
- * @param {number} productId - ID của sản phẩm.
- * @returns {Promise<Comment[]>} - Danh sách các bình luận gốc, mỗi bình luận chứa các câu trả lời (replies).
- */
+
 const getCommentsByProduct = async (productId) => {
-    // Đầu tiên, kiểm tra xem sản phẩm có tồn tại không
     const productExists = await Product.findByPk(productId);
     if (!productExists) {
         throw new Error(`Không tìm thấy sản phẩm với ID ${productId}.`);
     }
 
-    // Lấy tất cả các bình luận cấp cao nhất (không có parent_id)
     const comments = await Comment.findAll({
         where: {
             product_id: productId,
-            parent_id: null // Chỉ lấy các bình luận gốc
+            parent_id: null 
         },
         include: [
             {
@@ -48,20 +41,36 @@ const getCommentsByProduct = async (productId) => {
     return comments;
 };
 
-/**
- * Tạo một bình luận mới (do khách hàng thực hiện).
- * @param {object} commentData - Dữ liệu bình luận { content, product_id }.
- * @param {number} customerId - ID của khách hàng đang đăng nhập.
- * @returns {Promise<Comment>} - Bình luận vừa được tạo.
- * @throws {Error}
- */
+
+
+
+const getAllComments = async () => {
+    const comments = await Comment.findAll({
+        include: [
+            {
+                model: Customer,
+                as: 'customer', 
+                attributes: ['id', 'name']
+            },
+            {
+                model: Product,
+                as: 'product', 
+                attributes: ['id', 'name']
+            }
+        ],
+        order: [['createdAt', 'DESC']] 
+    });
+    return comments;
+};
+
+
+
 const createCustomerComment = async (commentData, customerId) => {
     const { content, product_id } = commentData;
     if (!content || !product_id) {
         throw new Error('Nội dung và ID sản phẩm là bắt buộc.');
     }
 
-    // Kiểm tra sản phẩm và khách hàng có tồn tại không
     const product = await Product.findByPk(product_id);
     if (!product) {
         throw new Error(`Không tìm thấy sản phẩm với ID ${product_id}.`);
@@ -81,14 +90,7 @@ const createCustomerComment = async (commentData, customerId) => {
     return newComment;
 };
 
-/**
- * Tạo một câu trả lời cho bình luận (do admin thực hiện).
- * @param {number} parentId - ID của bình luận cha đang được trả lời.
- * @param {object} replyData - Dữ liệu câu trả lời { content }.
- * @param {number} adminId - ID của admin đang đăng nhập (dùng để ghi log nếu cần, ở đây không lưu vào DB).
- * @returns {Promise<Comment>} - Câu trả lời vừa được tạo.
- * @throws {Error}
- */
+
 const createAdminReply = async (parentId, replyData) => {
     const { content } = replyData;
     if (!content) {
@@ -113,15 +115,7 @@ const createAdminReply = async (parentId, replyData) => {
 };
 
 
-/**
- * Cập nhật nội dung một bình luận.
- * Chỉ chủ sở hữu bình luận mới có quyền cập nhật.
- * @param {number} commentId - ID của bình luận cần cập nhật.
- * @param {object} updateData - Dữ liệu cập nhật { content }.
- * @param {number} userId - ID của người dùng yêu cầu (khách hàng).
- * @returns {Promise<Comment>} - Bình luận sau khi cập nhật.
- * @throws {Error}
- */
+
 const updateComment = async (commentId, updateData, userId) => {
     const { content } = updateData;
     if (!content) {
@@ -133,7 +127,6 @@ const updateComment = async (commentId, updateData, userId) => {
         throw new Error(`Không tìm thấy bình luận với ID ${commentId}.`);
     }
 
-    // Kiểm tra quyền: Chỉ chủ sở hữu mới được sửa
     if (comment.customer_id !== userId) {
         throw new Error('Bạn không có quyền chỉnh sửa bình luận này.');
     }
@@ -142,22 +135,13 @@ const updateComment = async (commentId, updateData, userId) => {
     return comment;
 };
 
-/**
- * Xóa một bình luận.
- * Chủ sở hữu hoặc Admin có quyền xóa.
- * Khi xóa bình luận cha, các câu trả lời cũng sẽ bị xóa (do 'onDelete: CASCADE' trong model).
- * @param {number} commentId - ID của bình luận cần xóa.
- * @param {object} user - Thông tin người dùng { id, role: 'customer' | 'admin' }.
- * @returns {Promise<void>}
- * @throws {Error}
- */
+
 const deleteComment = async (commentId, user) => {
     const comment = await Comment.findByPk(commentId);
     if (!comment) {
         throw new Error(`Không tìm thấy bình luận với ID ${commentId} để xóa.`);
     }
 
-    // Kiểm tra quyền: Hoặc là admin, hoặc là chủ sở hữu bình luận
     const isOwner = comment.customer_id === user.id;
     const isAdmin = user.role === 'admin';
 
@@ -165,7 +149,7 @@ const deleteComment = async (commentId, user) => {
         throw new Error('Bạn không có quyền xóa bình luận này.');
     }
 
-    await comment.destroy(); // destroy() sẽ kích hoạt onDelete: CASCADE
+    await comment.destroy(); 
 };
 
 module.exports = {
@@ -174,4 +158,5 @@ module.exports = {
     createAdminReply,
     updateComment,
     deleteComment,
+    getAllComments
 };

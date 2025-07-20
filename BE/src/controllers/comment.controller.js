@@ -142,10 +142,25 @@ const deleteComment = async (req, res) => {
 };
 
 
+const getAll = async (req, res) => {
+    try {
+        const comments = await commentService.getAllComments();
+        res.status(200).json({
+            success: true,
+            data: comments
+        });
+    } catch (error) {
+        console.error("Get All Comments Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ.' });
+    }
+};
+
+
 module.exports = {
     getByProduct,
     createComment,
     createReply,
     update,
-    deleteComment
+    deleteComment,
+    getAll
 };

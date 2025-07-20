@@ -40,5 +40,11 @@ router.delete('/:id',
     commentController.deleteComment
 );
 
+router.get('/all',
+    authenticateToken,
+    authorizeRole('admin'),
+    commentController.getAll
+);
+
 
 module.exports = router;

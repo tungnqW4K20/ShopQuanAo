@@ -46,7 +46,7 @@ function App() {
         <Route path="manage/orders" element={<ManageOrdersPage />} />
         <Route path="manage/imports" element={<ImportInvoiceManagement />} />
         <Route path="imports/new" element={<CreateImportInvoice />} />
-        <Route path="/admin/products/:productId/comments" element={<ManageProductComments />} />
+        <Route path="/admin/products/comments" element={<ManageProductComments />} />
         <Route path="/todoapp" element={<TODOAPP />} />
 
       </Route>
