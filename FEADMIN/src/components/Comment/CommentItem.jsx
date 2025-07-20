@@ -1,10 +1,11 @@
-// src/components/admin/CommentItem.jsx
+// src/components/Comment/CommentItem.jsx
 import React, { useState } from 'react';
 import ReplyForm from './ReplyForm';
-import { FaUserCircle, FaStore } from 'react-icons/fa';
+import { FaUserCircle, FaStore, FaTrash } from 'react-icons/fa'; // Thêm FaTrash
 import { MdReply } from 'react-icons/md';
 
-function CommentItem({ comment, onReplySubmit }) {
+// Thêm onDelete vào props
+function CommentItem({ comment, onReplySubmit, onDelete }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,13 +21,24 @@ function CommentItem({ comment, onReplySubmit }) {
 
   const handleReply = async (replyContent) => {
     setIsSubmitting(true);
-    await onReplySubmit(comment.id, { content: replyContent });
+    // onReplySubmit có thể không tồn tại trên một số trang, kiểm tra trước khi gọi
+    if (onReplySubmit) {
+      await onReplySubmit(comment.id, { content: replyContent });
+    }
     setIsSubmitting(false);
-    setShowReplyForm(false); // Ẩn form sau khi trả lời thành công
+    setShowReplyForm(false);
+  };
+  
+  const handleDeleteClick = (commentId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa bình luận này? Hành động này không thể hoàn tác.')) {
+        // onDelete có thể không tồn tại, kiểm tra trước khi gọi
+        if (onDelete) {
+            onDelete(commentId);
+        }
+    }
   };
 
   const CommentBubble = ({ c, isReply = false }) => {
-    // Nếu customer là null, đây là trả lời của admin (shop)
     const isAdminReply = !c.customer; 
     
     return (
@@ -40,10 +52,23 @@ function CommentItem({ comment, onReplySubmit }) {
             </div>
             <div className={`p-3 rounded-lg w-full ${isAdminReply ? 'bg-indigo-50' : 'bg-gray-100'}`}>
                 <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm text-gray-800">
-                        {isAdminReply ? 'Shop' : c.customer?.name || 'Khách hàng'}
-                    </p>
-                    <time className="text-xs text-gray-500">{formatDate(c.createdAt)}</time>
+                    <div className="flex items-center space-x-2">
+                         <p className="font-semibold text-sm text-gray-800">
+                            {isAdminReply ? 'Shop' : c.customer?.name || 'Khách hàng'}
+                        </p>
+                        {c.product && (
+                            <span className="text-xs text-gray-500">(Sản phẩm: {c.product.name})</span>
+                        )}
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <time className="text-xs text-gray-500">{formatDate(c.createdAt)}</time>
+                        {/* Hiển thị nút xóa nếu hàm onDelete được cung cấp */}
+                        {onDelete && (
+                            <button onClick={() => handleDeleteClick(c.id)} className="text-red-500 hover:text-red-700">
+                                <FaTrash size={12} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <p className="text-sm text-gray-700 mt-1">{c.content}</p>
             </div>
@@ -53,39 +78,39 @@ function CommentItem({ comment, onReplySubmit }) {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow mb-4">
-      {/* Bình luận gốc của khách hàng */}
       <CommentBubble c={comment} />
 
-      {/* Danh sách các trả lời */}
       <div className="ml-6 pl-5 border-l-2 border-gray-200">
         {comment.Replies && comment.Replies.map(reply => (
           <CommentBubble key={reply.id} c={reply} isReply={true} />
         ))}
       </div>
 
-      {/* Nút và Form trả lời */}
-      <div className="ml-11 mt-3">
-        {!showReplyForm && (
-          <button
-            onClick={() => setShowReplyForm(true)}
-            className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800"
-          >
-            <MdReply className="mr-1" />
-            Trả lời
-          </button>
-        )}
-        {showReplyForm && (
-          <div>
-            <ReplyForm onSubmit={handleReply} isSubmitting={isSubmitting} />
+      {/* Chỉ hiển thị nút trả lời cho bình luận gốc và khi có hàm onReplySubmit */}
+      {onReplySubmit && (
+        <div className="ml-11 mt-3">
+            {!showReplyForm && (
             <button
-              onClick={() => setShowReplyForm(false)}
-              className="text-xs text-gray-500 hover:underline mt-2"
+                onClick={() => setShowReplyForm(true)}
+                className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800"
             >
-              Hủy
+                <MdReply className="mr-1" />
+                Trả lời
             </button>
-          </div>
-        )}
-      </div>
+            )}
+            {showReplyForm && (
+            <div>
+                <ReplyForm onSubmit={handleReply} isSubmitting={isSubmitting} />
+                <button
+                onClick={() => setShowReplyForm(false)}
+                className="text-xs text-gray-500 hover:underline mt-2"
+                >
+                Hủy
+                </button>
+            </div>
+            )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,12 +1,13 @@
-// src/components/admin/CommentList.jsx
+// src/components/Comment/CommentList.jsx
 import React from 'react';
 import CommentItem from './CommentItem';
 
-function CommentList({ comments, onReplySubmit }) {
+// Thêm onDelete vào props
+function CommentList({ comments, onReplySubmit, onDelete }) {
   if (!comments || comments.length === 0) {
     return (
       <div className="text-center py-10 bg-white rounded-lg shadow">
-        <p className="text-gray-500">Chưa có bình luận nào cho sản phẩm này.</p>
+        <p className="text-gray-500">Chưa có bình luận nào.</p>
       </div>
     );
   }
@@ -18,6 +19,7 @@ function CommentList({ comments, onReplySubmit }) {
           key={comment.id}
           comment={comment}
           onReplySubmit={onReplySubmit}
+          onDelete={onDelete} 
         />
       ))}
     </div>
