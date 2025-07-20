@@ -1,51 +1,56 @@
 'use strict';
 
-const customerService = require('../services/customer.service'); // Adjust path if necessary
+const customerService = require('../services/customer.service');
 
-/**
- * Controller to create a new customer (Registration).
- */
 const create = async (req, res) => {
     try {
-        const { name, email, address, username, password } = req.body;
+        const { name, email, address, username, password, phone } = req.body;
 
-        if (!name || !email || !address) {
+        if (!name || !email || !address || !phone) {
             return res.status(400).json({
                 success: false,
-                message: 'Tên, email và địa chỉ là các trường bắt buộc.'
+                message: 'Tên, email, địa chỉ và số điện thoại là các trường bắt buộc.'
             });
         }
-        // Password can be optional if username is also optional or for other auth methods
-        // if (!password) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Mật khẩu là trường bắt buộc.'
-        //     });
-        // }
 
+        const newCustomer = await customerService.createCustomer({
+            name,
+            email,
+            address,
+            username,
+            password,
+            phone
+        });
 
-        const newCustomer = await customerService.createCustomer({ name, email, address, username, password });
-
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: 'Đăng ký khách hàng thành công!',
             data: newCustomer
         });
     } catch (error) {
         console.error("Create Customer Error:", error.message);
+
         if (error.message.includes('đã tồn tại') || error.message.includes('đã được sử dụng')) {
-            return res.status(409).json({ success: false, message: error.message }); // 409 Conflict
+            return res.status(409).json({
+                success: false,
+                message: error.message
+            });
         }
+
         if (error.message.includes('bắt buộc') || error.name === 'SequelizeValidationError') {
-             return res.status(400).json({ success: false, message: error.message }); // 400 Bad Request
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
         }
-        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi tạo khách hàng.' });
+
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi máy chủ nội bộ khi tạo khách hàng.'
+        });
     }
 };
 
-/**
- * Controller to get all customers.
- */
 const getAll = async (req, res) => {
     try {
         const customers = await customerService.getAllCustomers();
@@ -59,9 +64,7 @@ const getAll = async (req, res) => {
     }
 };
 
-/**
- * Controller to get a customer by ID.
- */
+
 const getById = async (req, res) => {
     try {
         const customerId = req.params.id;
@@ -77,19 +80,17 @@ const getById = async (req, res) => {
     } catch (error) {
         console.error("Get Customer By ID Error:", error.message);
         if (error.message.includes('Không tìm thấy')) {
-            return res.status(404).json({ success: false, message: error.message }); // 404 Not Found
+            return res.status(404).json({ success: false, message: error.message }); 
         }
         res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy thông tin khách hàng.' });
     }
 };
 
-/**
- * Controller to update a customer by ID.
- */
+
 const update = async (req, res) => {
     try {
         const customerId = req.params.id;
-        const updateData = req.body; // { name, email, address, username, password }
+        const updateData = req.body; 
 
         if (isNaN(parseInt(customerId))) {
             return res.status(400).json({ success: false, message: 'ID khách hàng không hợp lệ.' });
@@ -124,10 +125,8 @@ const update = async (req, res) => {
     }
 };
 
-/**
- * Controller to delete a customer by ID (soft delete).
- */
-const deleteCtrl = async (req, res) => { // Renamed to avoid keyword conflict
+
+const deleteCtrl = async (req, res) => { 
     try {
         const customerId = req.params.id;
 
@@ -155,5 +154,5 @@ module.exports = {
     getAll,
     getById,
     update,
-    deleteCtrl // Use the new name
+    deleteCtrl 
 };

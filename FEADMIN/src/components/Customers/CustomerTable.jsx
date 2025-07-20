@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 
+// Bảng hiển thị danh sách khách hàng.
 const CustomerTable = ({ customers, onEdit, onDelete }) => {
   if (!customers || customers.length === 0) {
     return <p className="text-center text-gray-500">Không có khách hàng nào để hiển thị.</p>;
@@ -19,6 +20,9 @@ const CustomerTable = ({ customers, onEdit, onDelete }) => {
             </th>
             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
               Email
+            </th>
+            <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              Số Điện Thoại
             </th>
             <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
               Địa chỉ
@@ -42,6 +46,9 @@ const CustomerTable = ({ customers, onEdit, onDelete }) => {
               </td>
               <td className="px-5 py-4 border-b border-gray-200 bg-white text-sm">
                 {customer.email}
+              </td>
+              <td className="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                {customer.phone}
               </td>
               <td className="px-5 py-4 border-b border-gray-200 bg-white text-sm">
                 {customer.address}

@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { FiSearch, FiUser, FiShoppingBag, FiMenu, FiX, FiStar } from 'react-icons/fi';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 import { useAuth } from '../context/AuthContext';
+import CartPopup from './CartPopup'; // 1. Import component giỏ hàng mini
+import axios from 'axios';           // 2. Import axios để gọi API
 
+// Component Link cho dropdown menu
 const DropdownLink = ({ to, children }) => (
   <Link to={to} className="block py-1 text-sm text-gray-700 hover:text-blue-600 hover:font-medium transition-colors">
     {children}
   </Link>
 );
 
+// Các component MegaMenu (giữ nguyên không thay đổi)
 const MegaMenuNam = () => (
   <div className="grid grid-cols-4 gap-x-8 gap-y-4">
     <div>
@@ -83,7 +87,7 @@ const MegaMenuNam = () => (
 );
 
 const MegaMenuNu = () => (
-  <div className="grid grid-cols-4 gap-x-8 gap-y-4">
+    <div className="grid grid-cols-4 gap-x-8 gap-y-4">
     <div>
       <Link to="/tat-ca-san-pham-nu" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">TẤT CẢ SẢN PHẨM →</Link>
       <ul>
@@ -218,74 +222,96 @@ const MegaMenuCareShare = () => (
 
 
 const Header = () => {
+  // State cho các chức năng cũ
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
-
   const [menuTimeoutId, setMenuTimeoutId] = useState(null);
   const [dropdownTimeoutId, setDropdownTimeoutId] = useState(null);
 
-  const { user, isAuthenticated, logout } = useAuth();
+  // 3. Các state mới để quản lý giỏ hàng và popup
+  const [cartItems, setCartItems] = useState([]);
+  const [isCartPopupOpen, setIsCartPopupOpen] = useState(false);
+  const [cartPopupTimeoutId, setCartPopupTimeoutId] = useState(null);
+  
+  // Lấy thông tin xác thực từ Context
+  const { user, isAuthenticated, logout, token } = useAuth();
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  // 4. Hook để lấy dữ liệu giỏ hàng từ API
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      // Chỉ gọi API khi người dùng đã đăng nhập và có token
+      if (isAuthenticated && token) {
+        try {
+          const response = await axios.get('http://localhost:3000/api/carts', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.data.success) {
+            // Định dạng lại dữ liệu từ API cho phù hợp với component
+            const formattedItems = response.data.data.map(item => ({
+              id: item.id,
+              productId: item.product.id,
+              name: item.product.name,
+              image: item.colorVariant.image_urls[0] || item.product.image_url,
+              color: item.colorVariant.name,
+              size: item.sizeVariant.name,
+              quantity: item.quantity,
+              price: parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price),
+              originalPrice: (parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price)) * 1.25,
+            }));
+            setCartItems(formattedItems);
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
+          setCartItems([]); // Reset giỏ hàng về rỗng nếu có lỗi
+        }
+      } else {
+        setCartItems([]); // Nếu không đăng nhập, giỏ hàng luôn trống
+      }
+    };
 
-  const openLoginModal = () => {
-    setIsRegisterModalOpen(false);
-    setIsLoginModalOpen(true);
-    setIsMobileMenuOpen(false);
-    setActiveMenu(null);
-  };
+    fetchCartItems();
+  }, [isAuthenticated, token]); // Chạy lại hook này mỗi khi trạng thái đăng nhập hoặc token thay đổi
+
+  // Các hàm xử lý chức năng cũ (giữ nguyên không thay đổi)
+  const toggleMobileMenu = () => { setIsMobileMenuOpen(!isMobileMenuOpen); };
+  const openLoginModal = () => { setIsRegisterModalOpen(false); setIsLoginModalOpen(true); setIsMobileMenuOpen(false); setActiveMenu(null); };
   const closeLoginModal = () => setIsLoginModalOpen(false);
-
-  const openRegisterModal = () => {
-    setIsLoginModalOpen(false);
-    setIsRegisterModalOpen(true);
-    setIsMobileMenuOpen(false);
-    setActiveMenu(null);
-  };
+  const openRegisterModal = () => { setIsLoginModalOpen(false); setIsRegisterModalOpen(true); setIsMobileMenuOpen(false); setActiveMenu(null); };
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
+  const switchToRegister = () => { closeLoginModal(); openRegisterModal(); };
+  const switchToLogin = () => { closeRegisterModal(); openLoginModal(); };
+  const handleMouseEnterNav = (menuName) => { if (dropdownTimeoutId) clearTimeout(dropdownTimeoutId); if (menuTimeoutId) clearTimeout(menuTimeoutId); setActiveMenu(menuName); };
+  const handleMouseLeaveNav = () => { const timeoutId = setTimeout(() => { setActiveMenu(null); }, 150); setMenuTimeoutId(timeoutId); };
+  const handleMouseEnterDropdown = () => { if (menuTimeoutId) clearTimeout(menuTimeoutId); if (dropdownTimeoutId) clearTimeout(dropdownTimeoutId); };
+  const handleMouseLeaveDropdown = () => { const timeoutId = setTimeout(() => { setActiveMenu(null); }, 150); setDropdownTimeoutId(timeoutId); };
+  const handleLogout = () => { logout(); };
 
-  const switchToRegister = () => {
-    closeLoginModal();
-    openRegisterModal();
+  // 5. Các hàm mới để xử lý popup giỏ hàng
+  const handleMouseEnterCart = () => {
+    if (cartPopupTimeoutId) clearTimeout(cartPopupTimeoutId);
+    // Chỉ mở popup nếu đã đăng nhập và có sản phẩm trong giỏ
+    if (isAuthenticated && cartItems.length > 0) {
+      setIsCartPopupOpen(true);
+    }
   };
 
-  const switchToLogin = () => {
-    closeRegisterModal();
-    openLoginModal();
-  };
-
-  const handleMouseEnterNav = (menuName) => {
-    if (dropdownTimeoutId) clearTimeout(dropdownTimeoutId);
-    if (menuTimeoutId) clearTimeout(menuTimeoutId);
-    setActiveMenu(menuName);
-  };
-
-  const handleMouseLeaveNav = () => {
+  const handleMouseLeaveCart = () => {
+    // Đặt một khoảng thời gian chờ trước khi đóng popup.
+    // Điều này cho phép người dùng di chuột từ icon vào popup mà không làm nó bị đóng.
     const timeoutId = setTimeout(() => {
-        setActiveMenu(null);
-    }, 150);
-    setMenuTimeoutId(timeoutId);
+      setIsCartPopupOpen(false);
+    }, 200);
+    setCartPopupTimeoutId(timeoutId);
   };
 
-  const handleMouseEnterDropdown = () => {
-    if (menuTimeoutId) clearTimeout(menuTimeoutId);
-    if (dropdownTimeoutId) clearTimeout(dropdownTimeoutId);
+  const closeCartPopup = () => {
+    setIsCartPopupOpen(false);
   };
 
-  const handleMouseLeaveDropdown = () => {
-     const timeoutId = setTimeout(() => {
-        setActiveMenu(null);
-    }, 150);
-    setDropdownTimeoutId(timeoutId);
-  };
-
-  const handleLogout = () => {
-    logout();
-  }
+  // Tính tổng số lượng sản phẩm để hiển thị trên huy hiệu.
+  const cartItemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
   const activeClassName = "text-blue-600 font-bold border-b-2 border-blue-600";
   const inactiveClassName = "border-b-2 border-transparent";
@@ -293,6 +319,7 @@ const Header = () => {
   return (
     <>
       <header className="w-full sticky top-0 z-30 bg-white shadow-sm">
+        {/* Thanh header trên cùng */}
         <div className="bg-gray-600 text-white text-xs sm:text-sm">
           <div className="container mx-auto px-4 py-1.5 flex justify-between items-center">
             <div className="flex items-center space-x-3 sm:space-x-5">
@@ -307,7 +334,7 @@ const Header = () => {
                <span className="hidden sm:inline text-gray-400">|</span>
               <Link to="/blog" className="hidden sm:inline hover:text-gray-300 transition-colors">Blog</Link>
                <span className="text-gray-400">|</span>
-              <Link to="/support" className="hover:text-gray-300 transition-colors">Trung tâm CSKH</Link>
+              <Link to="/customer-care" className="hover:text-gray-300 transition-colors">Trung tâm CSKH</Link>
                <span className="text-gray-400">|</span>
                {isAuthenticated && user ? 
                   <div className='flex space-x-2'>
@@ -332,6 +359,7 @@ const Header = () => {
           </div>
         </div>
 
+        {/* Thanh header chính với logo, menu và các icon */}
         <div className="bg-white border-b border-gray-200 relative">
           <div className="container mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
             <div className="flex items-center">
@@ -346,53 +374,17 @@ const Header = () => {
             </div>
 
             <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8 font-semibold text-sm text-gray-700 h-full">
-              <div
-                className="h-full flex items-center"
-                onMouseEnter={() => handleMouseEnterNav('nam')}
-                onMouseLeave={handleMouseLeaveNav}
-              >
-                <NavLink
-                  to="/nam"
-                  className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}
-                  >
-                    NAM
-                  </NavLink>
+              <div className="h-full flex items-center" onMouseEnter={() => handleMouseEnterNav('nam')} onMouseLeave={handleMouseLeaveNav}>
+                <NavLink to="/nam" className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}>NAM</NavLink>
               </div>
-              <div
-                className="h-full flex items-center"
-                onMouseEnter={() => handleMouseEnterNav('nu')}
-                onMouseLeave={handleMouseLeaveNav}
-                >
-                 <NavLink
-                    to="/nu"
-                    className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}
-                    >
-                    NỮ
-                  </NavLink>
+              <div className="h-full flex items-center" onMouseEnter={() => handleMouseEnterNav('nu')} onMouseLeave={handleMouseLeaveNav}>
+                 <NavLink to="/nu" className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}>NỮ</NavLink>
               </div>
-               <div
-                 className="h-full flex items-center"
-                 onMouseEnter={() => handleMouseEnterNav('the-thao')}
-                 onMouseLeave={handleMouseLeaveNav}
-                >
-                <NavLink
-                    to="/the-thao"
-                    className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}
-                    >
-                    THỂ THAO
-                  </NavLink>
+               <div className="h-full flex items-center" onMouseEnter={() => handleMouseEnterNav('the-thao')} onMouseLeave={handleMouseLeaveNav}>
+                <NavLink to="/the-thao" className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}>THỂ THAO</NavLink>
               </div>
-               <div
-                 className="h-full flex items-center"
-                 onMouseEnter={() => handleMouseEnterNav('care-share')}
-                 onMouseLeave={handleMouseLeaveNav}
-                >
-                 <NavLink
-                    to="/care-share"
-                    className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}
-                    >
-                    CARE & SHARE
-                  </NavLink>
+               <div className="h-full flex items-center" onMouseEnter={() => handleMouseEnterNav('care-share')} onMouseLeave={handleMouseLeaveNav}>
+                 <NavLink to="/care-share" className={({ isActive }) => `h-full flex items-center px-1 pt-0.5 pb-[calc(0.125rem+2px)] focus:outline-none focus:ring-1 focus:ring-blue-400 hover:text-blue-600 transition-colors ${isActive ? activeClassName : inactiveClassName}`}>CARE & SHARE</NavLink>
               </div>
             </nav>
 
@@ -409,16 +401,33 @@ const Header = () => {
                   <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
                 </Link>
               }
-              <Link to="/cart" className="relative text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Giỏ hàng">
-                <FiShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center pointer-events-none">3</span>
-              </Link>
+              {/* 6. Khu vực giỏ hàng đã được cập nhật */}
+              <div
+                className="relative"
+                onMouseEnter={handleMouseEnterCart}
+                onMouseLeave={handleMouseLeaveCart}
+              >
+                <Link to="/cart" className="relative text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Giỏ hàng">
+                  <FiShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
+                  {/* Chỉ hiển thị số lượng khi đã đăng nhập và có sản phẩm */}
+                  {isAuthenticated && cartItemCount > 0 && (
+                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center pointer-events-none">
+                       {cartItemCount}
+                     </span>
+                  )}
+                </Link>
+
+                {/* Hiển thị popup giỏ hàng mini một cách có điều kiện */}
+                {isCartPopupOpen && <CartPopup items={cartItems} onClose={closeCartPopup} />}
+              </div>
+
               <button type="button" onClick={toggleMobileMenu} className="lg:hidden text-gray-600 hover:text-blue-600 focus:outline-none p-1 rounded-md focus:ring-1 focus:ring-blue-500" aria-label="Toggle menu" aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu">
                 {isMobileMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
               </button>
             </div>
           </div>
 
+           {/* Khu vực Mega Menu */}
            <div
              className={`absolute top-full left-0 w-full bg-white shadow-lg border-t border-gray-200 z-40 transition-opacity duration-150 ease-in-out ${activeMenu ? 'opacity-100 visible' : 'opacity-0 invisible'} lg:block hidden`}
              onMouseEnter={handleMouseEnterDropdown}
@@ -433,6 +442,7 @@ const Header = () => {
            </div>
         </div>
 
+        {/* Menu cho thiết bị di động */}
         {isMobileMenuOpen && (
           <div id="mobile-menu" className="lg:hidden bg-white border-b border-gray-200 absolute top-full left-0 w-full z-40 shadow-md transition-transform duration-300 ease-in-out origin-top transform scale-y-100">
            <div className="container mx-auto px-4 py-4">
@@ -450,7 +460,7 @@ const Header = () => {
                <NavLink to="/care-share" className={({isActive}) => `px-2 py-1.5 rounded hover:bg-gray-100 hover:text-blue-600 transition-colors block ${isActive ? 'text-blue-600 font-bold' : ""}`} onClick={toggleMobileMenu}>CARE & SHARE</NavLink>
                <hr className="my-2"/>
                <Link to="/blog" className="px-2 py-1.5 rounded hover:bg-gray-100 hover:text-blue-600 transition-colors block" onClick={toggleMobileMenu}>Blog</Link>
-               <Link to="/support" className="px-2 py-1.5 rounded hover:bg-gray-100 hover:text-blue-600 transition-colors block" onClick={toggleMobileMenu}>Trung tâm CSKH</Link>
+               <Link to="/customer-care" className="px-2 py-1.5 rounded hover:bg-gray-100 hover:text-blue-600 transition-colors block" onClick={toggleMobileMenu}>Trung tâm CSKH</Link>
                <button
                   type="button"
                   onClick={openLoginModal}
@@ -464,6 +474,7 @@ const Header = () => {
         )}
       </header>
 
+      {/* Các modal đăng nhập/đăng ký */}
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={closeLoginModal}

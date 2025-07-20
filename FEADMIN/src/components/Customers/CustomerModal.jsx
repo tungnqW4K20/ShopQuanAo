@@ -1,10 +1,11 @@
-// src/components/Customer/CustomerModal.jsx
 import React, { useState, useEffect } from 'react';
 
+// Modal để thêm hoặc chỉnh sửa thông tin khách hàng.
 const CustomerModal = ({ isOpen, onClose, onSubmit, customer }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     address: '',
     username: '',
     password: '', 
@@ -19,6 +20,7 @@ const CustomerModal = ({ isOpen, onClose, onSubmit, customer }) => {
         setFormData({
           name: customer.name || '',
           email: customer.email || '',
+          phone: customer.phone || '',
           address: customer.address || '',
           username: customer.username || '',
           password: '',
@@ -27,6 +29,7 @@ const CustomerModal = ({ isOpen, onClose, onSubmit, customer }) => {
         setFormData({
           name: '',
           email: '',
+          phone: '',
           address: '',
           username: '',
           password: '',
@@ -48,6 +51,7 @@ const CustomerModal = ({ isOpen, onClose, onSubmit, customer }) => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ.';
     }
+    if (!formData.phone.trim()) newErrors.phone = 'Số điện thoại không được để trống.';
     if (!formData.address.trim()) newErrors.address = 'Địa chỉ không được để trống.';
     if (!formData.username.trim()) newErrors.username = 'Username không được để trống.';
     if (!isEditMode && !formData.password) {
@@ -114,6 +118,19 @@ const CustomerModal = ({ isOpen, onClose, onSubmit, customer }) => {
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
 
+          <div className="mb-4">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Số Điện Thoại</label>
+            <input
+              type="tel"
+              name="phone"
+              id="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={`mt-1 block w-full px-3 py-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+            />
+            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+          </div>
+          
           <div className="mb-4">
             <label htmlFor="address" className="block text-sm font-medium text-gray-700">Địa chỉ</label>
             <input

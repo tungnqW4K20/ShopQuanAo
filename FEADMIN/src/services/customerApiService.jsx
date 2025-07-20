@@ -1,12 +1,11 @@
-// src/services/customerApiService.js
-import request from './apiService'; // Assuming apiService.js is in the same directory
+import request from './apiService'; 
 
 const API_ENDPOINT = '/customers';
 
 const getAllCustomers = async () => {
   const response = await request({ method: 'get', url: API_ENDPOINT });
   if (response && response.success) {
-    return response.data; // Assuming API returns { success: true, data: [...] }
+    return response.data; 
   } else {
     throw new Error(response?.message || 'Không thể lấy danh sách khách hàng từ API.');
   }
@@ -15,17 +14,16 @@ const getAllCustomers = async () => {
 const getCustomerById = async (id) => {
   const response = await request({ method: 'get', url: `${API_ENDPOINT}/${id}` });
   if (response && response.success) {
-    return response.data; // Assuming API returns { success: true, data: {...} }
+    return response.data; 
   } else {
     throw new Error(response?.message || `Không thể lấy thông tin khách hàng ID ${id} từ API.`);
   }
 };
 
 const createCustomer = async (customerData) => {
-  // The example request includes 'password', ensure it's handled here
   const response = await request({ method: 'post', url: API_ENDPOINT, data: customerData });
   if (response && response.success) {
-    return response.data; // Assuming API returns { success: true, data: {...createdCustomer} }
+    return response.data; 
   } else {
     throw new Error(response?.message || 'Tạo khách hàng thất bại.');
   }

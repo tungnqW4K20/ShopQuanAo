@@ -1,5 +1,4 @@
-// src/pages/ManageCustomers.jsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Added useMemo
+import React, { useState, useEffect, useCallback, useMemo } from 'react'; 
 import customerApiService from '../services/customerApiService';
 import CustomerTable from '../components/Customers/CustomerTable';
 import CustomerModal from '../components/Customers/CustomerModal';
@@ -7,14 +6,14 @@ import ConfirmDeleteModal from '../components/Category/ConfirmDeleteModal';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AiOutlineUserAdd } from 'react-icons/ai';
-import { FaSearch } from 'react-icons/fa'; // Icon for search
+import { FaSearch } from 'react-icons/fa'; 
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 function ManageCustomers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(''); // State for the search term
+  const [searchTerm, setSearchTerm] = useState(''); 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -45,10 +44,9 @@ function ManageCustomers() {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  // Memoized filtered list of customers
   const filteredCustomers = useMemo(() => {
     if (!searchTerm.trim()) {
-      return customers; // If no search term, return all customers
+      return customers; 
     }
     return customers.filter(customer =>
       customer.name && customer.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -94,7 +92,7 @@ function ManageCustomers() {
       }
       toast.success(`${actionType} khách hàng thành công!`);
       handleCloseModal();
-      fetchCustomers(); // Refresh the list
+      fetchCustomers(); 
     } catch (err) {
       console.error(`Save customer error (${actionType}):`, err);
       toast.error(err.message || `${actionType} khách hàng thất bại.`);
@@ -111,7 +109,7 @@ function ManageCustomers() {
       await customerApiService.deleteCustomer(customerToDelete.id);
       toast.success(`Xóa khách hàng "${customerToDelete.name}" thành công!`);
       handleCloseDeleteDialog();
-      fetchCustomers(); // Refresh the list
+      fetchCustomers(); 
     } catch (err)
     {
       console.error("Delete customer error:", err);
@@ -127,13 +125,11 @@ function ManageCustomers() {
     <div className="container mx-auto px-4 sm:px-8">
       <ToastContainer autoClose={3000} hideProgressBar />
       <div className="py-8">
-        {/* Header: Title, Search, Add Button */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-3 sm:space-y-0">
           <h1 className="text-2xl font-semibold leading-tight text-gray-800 self-start sm:self-center">
             Quản lý Khách hàng
           </h1>
           <div className="flex items-center space-x-3 w-full sm:w-auto">
-            {/* Search Input */}
             <div className="relative flex-grow sm:flex-grow-0">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FaSearch className="text-gray-400" />
@@ -144,10 +140,9 @@ function ManageCustomers() {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                style={{ minWidth: '200px' }} // Ensure it has some base width
+                style={{ minWidth: '200px' }} 
               />
             </div>
-            {/* Add Button */}
             <button
               onClick={handleOpenAddModal}
               className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 ease-in-out whitespace-nowrap"
@@ -161,7 +156,6 @@ function ManageCustomers() {
 
         {!loading && (
           <>
-            {/* Specific message for no search results when there are customers */}
             {customers.length > 0 && filteredCustomers.length === 0 && searchTerm.trim() !== '' ? (
               <p className="text-center text-gray-500 py-4">
                 Không tìm thấy khách hàng nào khớp với tìm kiếm "{searchTerm}".
@@ -172,8 +166,7 @@ function ManageCustomers() {
                 onEdit={handleOpenEditModal}
                 onDelete={handleOpenDeleteDialog}
               />
-              // CustomerTable will show its own "Không có khách hàng nào để hiển thị."
-              // if filteredCustomers is empty (either initially no customers, or search yields nothing from an empty list)
+              
             )}
           </>
         )}

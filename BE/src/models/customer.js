@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       Customer.hasMany(models.Rating, { foreignKey: 'customer_id', as: 'ratings' });
     }
   }
+
   Customer.init({
     id: {
       type: DataTypes.INTEGER,
@@ -18,36 +19,44 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     name: {
-      type: DataTypes.STRING(100), // nvarchar -> STRING
-      allowNull: false
+      type: DataTypes.STRING(100),
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
       validate: {
-        isEmail: true
-      }
+        isEmail: true,
+      },
     },
-    address: { // Corrected spelling
-      type: DataTypes.STRING(200), // nvarchar -> STRING
-      allowNull: false
+    phone: {
+      type: DataTypes.STRING(20),
+      allowNull: true,          // Cho phép null
+      unique: true,             // Nhưng nếu có thì phải duy nhất
+      defaultValue: null,
+    },
+    address: {
+      type: DataTypes.STRING(200),
+      allowNull: false,
     },
     username: {
       type: DataTypes.STRING(100),
       allowNull: true,
-      unique: true
+      unique: true,
+      defaultValue: null,
     },
     password: {
       type: DataTypes.STRING(100),
-      allowNull: true // Allow null for different auth methods or security practices
+      allowNull: true,
     }
   }, {
     sequelize,
     modelName: 'Customer',
     tableName: 'customers',
     timestamps: true,
-    paranoid: true
+    paranoid: true,
   });
+
   return Customer;
 };

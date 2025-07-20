@@ -20,22 +20,22 @@ const customerToJSON = (customer) => {
 
 
 const createCustomer = async (customerData) => {
-    const { name, email, address, username, password } = customerData;
+    const { name, email, address, username, password, phone } = customerData;
 
-    if (!name || !email || !address) {
-        throw new Error('Tên, email và địa chỉ là bắt buộc.');
+    if (!name || !email || !address || !phone) {
+        throw new Error('Tên, email, địa chỉ và số điện thoại là bắt buộc.');
     }
 
-    // Validate email format (Sequelize does this, but an early check can be useful)
-    // For simplicity, relying on Sequelize validation for now.
-
-    // Check for existing email
     const existingEmail = await Customer.findOne({ where: { email } });
     if (existingEmail) {
         throw new Error(`Email "${email}" đã tồn tại.`);
     }
 
-    // Check for existing username if provided
+    const existingPhone = await Customer.findOne({ where: { phone } });
+    if (existingPhone) {
+        throw new Error(`Số điện thoại "${phone}" đã tồn tại.`);
+    }
+
     if (username) {
         const existingUsername = await Customer.findOne({ where: { username } });
         if (existingUsername) {
@@ -43,7 +43,7 @@ const createCustomer = async (customerData) => {
         }
     }
 
-    const customerToCreate = { name, email, address, username };
+    const customerToCreate = { name, email, address, username, phone };
 
     if (password) {
         customerToCreate.password = await bcrypt.hash(password, SALT_ROUNDS);
@@ -52,6 +52,7 @@ const createCustomer = async (customerData) => {
     const newCustomer = await Customer.create(customerToCreate);
     return customerToJSON(newCustomer);
 };
+
 
 /**
  * Get all customers (non-deleted).
