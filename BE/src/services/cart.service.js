@@ -9,6 +9,7 @@ const SizeProduct = db.SizeProduct;
 
 
 const addItemToCart = async (customerId, itemData) => {
+    consele.log("1111111111111111111111111")
     const { product_id, color_product_id, size_product_id, quantity } = itemData;
 
     // 1. Validation (Giữ nguyên)
@@ -74,6 +75,8 @@ const addItemToCart = async (customerId, itemData) => {
         ]
     });
 
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     return itemWithDetails;
 };
 
@@ -121,6 +124,7 @@ const updateCartItem = async (customerId, itemId, quantity) => {
         throw new Error('Không tìm thấy sản phẩm trong giỏ hàng.');
     }
     await cartItem.update({ quantity });
+    await new Promise(resolve => setTimeout(resolve, 3000));
     return cartItem;
 };
 

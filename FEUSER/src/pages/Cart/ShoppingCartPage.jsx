@@ -3,6 +3,7 @@ import { TrashIcon } from '@heroicons/react/20/solid';
 import QuantitySelector from './QuantitySelector';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 
 const formatPrice = (value) => {
   if (value === null || value === undefined) return '0đ';
@@ -25,9 +26,6 @@ const VIETNAM_ADDRESS_API_URL = 'https://raw.githubusercontent.com/madnh/hanhchi
 function ShoppingCartPage() {
   const { user, token, isAuthenticated } = useAuth();
 
-  const [cartItems, setCartItems] = useState([]);
-  const [isLoadingCart, setIsLoadingCart] = useState(true);
-  
   const [formData, setFormData] = useState({
     namePrefix: 'Anh/Chị', name: '', phone: '', email: '', address: '',
     city: '', district: '', ward: '', notes: '', isGift: false,
@@ -45,40 +43,15 @@ function ShoppingCartPage() {
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [addressError, setAddressError] = useState(null);
 
-  useEffect(() => {
-    const fetchCartItems = async () => {
-      if (!isAuthenticated || !token) {
-        setIsLoadingCart(false);
-        return;
-      }
-      setIsLoadingCart(true);
-      try {
-        const response = await axios.get('http://localhost:3000/api/carts', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.data.success) {
-          const formattedItems = response.data.data.map(item => ({
-            id: item.id,
-            productId: item.product.id,
-            name: item.product.name,
-            image: item.colorVariant.image_urls[0] || item.product.image_url,
-            color: item.colorVariant.name,
-            size: item.sizeVariant.name,
-            quantity: item.quantity,
-            price: parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price),
-            originalPrice: (parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price)) * 1.25
-          }));
-          setCartItems(formattedItems);
-        }
-      } catch (error) {
-        console.error("Failed to fetch cart items:", error);
-      } finally {
-        setIsLoadingCart(false);
-      }
-    };
+  const { 
+    cartItems, 
+    isLoading: isLoadingCart, 
+    updateCartItem, 
+    removeFromCart, 
+    subtotal,
+    clearCart, // Lấy thêm hàm clearCart
+  } = useCart();
 
-    fetchCartItems();
-  }, [isAuthenticated, token]);
 
   useEffect(() => {
     if (user) {
@@ -168,43 +141,6 @@ function ShoppingCartPage() {
     });
   };
 
-  const handleQuantityChange = async (itemId, newQuantity) => {
-    const quantity = Math.max(1, newQuantity);
-    const originalItems = [...cartItems];
-    setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, quantity } : item));
-
-    try {
-      await axios.put(`http://localhost:3000/api/carts/${itemId}`, { quantity }, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-    } catch (error) {
-      console.error("Failed to update cart item:", error);
-      alert("Lỗi! Không thể cập nhật số lượng sản phẩm.");
-      setCartItems(originalItems);
-    }
-  };
-
-  const handleRemoveItem = async (itemId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
-      return;
-    }
-    const originalItems = [...cartItems];
-    setCartItems(prev => prev.filter(item => item.id !== itemId));
-    try {
-      await axios.delete(`http://localhost:3000/api/carts/${itemId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-    } catch (error) {
-      console.error("Failed to remove cart item:", error);
-      alert("Lỗi! Không thể xóa sản phẩm.");
-      setCartItems(originalItems);
-    }
-  };
-
-  const subtotal = useMemo(() => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  }, [cartItems]);
-
   const total = useMemo(() => {
     const calculatedTotal = subtotal - appliedDiscount + shippingFee;
     return calculatedTotal > 0 ? calculatedTotal : 0;
@@ -272,8 +208,7 @@ function ShoppingCartPage() {
 
         if(response.data.success) {
             alert("Đặt hàng thành công!");
-            setCartItems([]);
-            // navigate('/order-confirmation/' + response.data.data.order.id);
+            clearCart();
         } else {
             alert(`Đặt hàng thất bại: ${response.data.message}`);
         }
@@ -283,14 +218,13 @@ function ShoppingCartPage() {
     }
   };
 
-  if (isLoadingCart) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="ml-4 text-gray-600">Đang tải giỏ hàng...</p>
-      </div>
-    );
-  }
+  // if (isLoadingCart) {
+  //   return (
+  //     <div className="min-h-screen flex justify-center items-center py-4">
+  //       <div className="animate-spin-slow rounded-full h-6 w-6 border-2 border-t-transparent border-blue-500"></div>
+  //     </div>
+  //   );
+  // }
 
   if (!isAuthenticated) {
       return (
@@ -315,6 +249,17 @@ function ShoppingCartPage() {
           </div>
       )
   }
+
+  const handleQuantityChange = (itemId, newQuantity) => {
+    const quantity = Math.max(1, newQuantity);
+    updateCartItem(itemId, quantity);
+  };
+
+  const handleRemoveItem = (itemId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
+      removeFromCart(itemId);
+    }
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen py-8 lg:py-12">
@@ -517,6 +462,7 @@ function ShoppingCartPage() {
                                         quantity={item.quantity}
                                         onDecrease={() => handleQuantityChange(item.id, item.quantity - 1)}
                                         onIncrease={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                        isLoadingCart={isLoadingCart}
                                      />
                                      <button
                                         type="button"

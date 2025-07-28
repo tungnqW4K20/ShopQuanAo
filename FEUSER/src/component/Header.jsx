@@ -6,6 +6,7 @@ import RegisterModal from './RegisterModal';
 import { useAuth } from '../context/AuthContext';
 import CartPopup from './CartPopup'; // 1. Import component giỏ hàng mini
 import axios from 'axios';           // 2. Import axios để gọi API
+import { useCart } from '../context/CartContext';
 
 // Component Link cho dropdown menu
 const DropdownLink = ({ to, children }) => (
@@ -231,48 +232,12 @@ const Header = () => {
   const [dropdownTimeoutId, setDropdownTimeoutId] = useState(null);
 
   // 3. Các state mới để quản lý giỏ hàng và popup
-  const [cartItems, setCartItems] = useState([]);
   const [isCartPopupOpen, setIsCartPopupOpen] = useState(false);
   const [cartPopupTimeoutId, setCartPopupTimeoutId] = useState(null);
   
   // Lấy thông tin xác thực từ Context
   const { user, isAuthenticated, logout, token } = useAuth();
-
-  // 4. Hook để lấy dữ liệu giỏ hàng từ API
-  useEffect(() => {
-    const fetchCartItems = async () => {
-      // Chỉ gọi API khi người dùng đã đăng nhập và có token
-      if (isAuthenticated && token) {
-        try {
-          const response = await axios.get('http://localhost:3000/api/carts', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (response.data.success) {
-            // Định dạng lại dữ liệu từ API cho phù hợp với component
-            const formattedItems = response.data.data.map(item => ({
-              id: item.id,
-              productId: item.product.id,
-              name: item.product.name,
-              image: item.colorVariant.image_urls[0] || item.product.image_url,
-              color: item.colorVariant.name,
-              size: item.sizeVariant.name,
-              quantity: item.quantity,
-              price: parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price),
-              originalPrice: (parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price)) * 1.25,
-            }));
-            setCartItems(formattedItems);
-          }
-        } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
-          setCartItems([]); // Reset giỏ hàng về rỗng nếu có lỗi
-        }
-      } else {
-        setCartItems([]); // Nếu không đăng nhập, giỏ hàng luôn trống
-      }
-    };
-
-    fetchCartItems();
-  }, [isAuthenticated, token]); // Chạy lại hook này mỗi khi trạng thái đăng nhập hoặc token thay đổi
+  const { cartItemCount, cartItems } = useCart();
 
   // Các hàm xử lý chức năng cũ (giữ nguyên không thay đổi)
   const toggleMobileMenu = () => { setIsMobileMenuOpen(!isMobileMenuOpen); };
@@ -309,9 +274,6 @@ const Header = () => {
   const closeCartPopup = () => {
     setIsCartPopupOpen(false);
   };
-
-  // Tính tổng số lượng sản phẩm để hiển thị trên huy hiệu.
-  const cartItemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
   const activeClassName = "text-blue-600 font-bold border-b-2 border-blue-600";
   const inactiveClassName = "border-b-2 border-transparent";

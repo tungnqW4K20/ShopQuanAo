@@ -9,6 +9,7 @@ import ImageGallery from './ImageGallery';
 import ProductDescription from './ProductDescription'; 
 import ProductInfo from './ProductInfo';                          
 import ProductReviews from './ProductReviews'; 
+import { useCart } from '../../context/CartContext';
 
 // Hàm chuyển đổi dữ liệu từ API sang định dạng component cần
 const transformApiDataToComponentProps = (apiData) => {
@@ -97,12 +98,13 @@ function ProductDetailPage() {
   const [product, setProduct] = useState(null);                
   const [isLoading, setIsLoading] = useState(true);             
   const [error, setError] = useState(null);
-  const [isAddingToCart, setIsAddingToCart] = useState(false); // State cho nút "Thêm vào giỏ"
 
   const [selectedColor, setSelectedColor] = useState(null);     
   const [selectedSize, setSelectedSize] = useState(null); // Sẽ lưu cả object size     
   const [quantity, setQuantity] = useState(1);
   const [galleryImages, setGalleryImages] = useState([]);
+
+  const { addToCart, isLoading: isCartLoading } = useCart();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -175,7 +177,6 @@ function ProductDetailPage() {
        return;
     }
 
-    setIsAddingToCart(true);
 
     const cartItemPayload = {
        product_id: product.id,
@@ -185,22 +186,12 @@ function ProductDetailPage() {
     };
     
     try {
-        const response = await axios.post('http://localhost:3000/api/carts', cartItemPayload, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.data.success) {
-            console.log('API Response:', response.data);
-            alert(`Thêm thành công: ${quantity} x "${response.data.data.product.name}" (${response.data.data.colorVariant.name} / ${response.data.data.sizeVariant.name})`);
-        } else {
-            alert(`Lỗi: ${response.data.message}`);
-        }
+        await addToCart(cartItemPayload);
+        alert(`Thêm thành công!`);
     } catch (error) {
         console.error("Lỗi khi thêm vào giỏ hàng:", error);
-        alert(`Đã xảy ra lỗi: ${error.response?.data?.message || 'Không thể kết nối đến máy chủ.'}`);
-    } finally {
-        setIsAddingToCart(false);
-    }
+        alert(`Đã xảy ra lỗi: ${error.message || 'Không thể kết nối đến máy chủ.'}`);
+    } 
   }
 
   if (isLoading) {
@@ -235,7 +226,7 @@ function ProductDetailPage() {
               quantity={quantity}
               onQuantityChange={handleQuantityChange}
               onAddToCart={handleAddToCart}
-              isAddingToCart={isAddingToCart}
+              isAddingToCart={isCartLoading} 
             />
           </div>
         </div>
