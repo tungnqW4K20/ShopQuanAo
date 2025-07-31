@@ -22,4 +22,6 @@ router.get('/:id/variants', productController.getVariants);
 
 router.get('/:id/details', productController.getDetailsById);
 
+router.get('/category/:categoryId', productController.getByCategory);
+
 module.exports = router;

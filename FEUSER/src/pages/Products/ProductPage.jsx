@@ -1,59 +1,112 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import ProductGrid from './ProductGrid';
-import { categories, sizes, colors as colorsData, products as allProducts } from './data'; // Import ALL dummy data
+import { sizes, colors as colorsData } from './data';
 
-const ITEMS_PER_PAGE = 8; // How many items to load each time
+const ITEMS_PER_PAGE = 8;
+
+const transformApiProduct = (apiProduct) => {
+  return {
+    id: apiProduct.id,
+    name: apiProduct.name,
+    imageUrl: apiProduct.image_url,
+    price: parseFloat(apiProduct.price),
+    originalPrice: null,
+    rating: null,
+    reviews: 0,
+    colors: [],
+    availableColorCount: 0,
+    badge: apiProduct.featured ? 'BÁN CHẠY' : null,
+    voucher: null,
+    offerText: null,
+    categoryId: apiProduct.category_id,
+    createdAt: apiProduct.createdAt,
+  };
+};
 
 function ProductPage() {
+  const [allProducts, setAllProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // For load more button state
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Filter State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0); 
+
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
+  const [sortOrder, setSortOrder] = useState('ban-chay');
 
-  // Sorting State
-  const [sortOrder, setSortOrder] = useState('ban-chay'); // Default sort
+  const fetchProducts = useCallback(async (page, category, isNewQuery = false) => {
+    if (isNewQuery) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+    setError(null);
 
-  // Pagination State
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+    let apiUrl;
+    if (category) {
+      apiUrl = `http://localhost:3000/api/products/category/${category}?page=${page}&limit=${ITEMS_PER_PAGE}`;
+    } else {
+      apiUrl = `http://localhost:3000/api/products/?page=${page}&limit=${ITEMS_PER_PAGE}`;
+    }
 
-  // Simulate initial data fetch
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
+    
+
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);
+      }
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const transformedProducts = result.data.map(transformApiProduct);
+
+        if (isNewQuery) {
+          setAllProducts(transformedProducts);
+        } else {
+          setAllProducts(prev => [...prev, ...transformedProducts]);
+        }
+        
+        if (result.pagination) {
+          setTotalPages(result.pagination.totalPages);
+          setTotalItems(result.pagination.totalItems); // Cập nhật tổng số sản phẩm
+        }
+      } else {
+        throw new Error(result.message || "Định dạng API không hợp lệ");
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải sản phẩm:", err);
+      setError(err.message);
+    } finally {
       setIsLoading(false);
-    }, 300); // Shorter delay now
-    return () => clearTimeout(timer);
-  }, []);
-
-  // --- Filtering Logic ---
-  const filteredProducts = useMemo(() => {
-    let products = [...allProducts]; // Start with a copy of all products
-
-    // Category Filter
-    if (selectedCategory) {
-      products = products.filter(p => p.categoryId === selectedCategory);
+      setIsLoadingMore(false);
     }
+  }, []); 
 
-    // Size Filter (Product must have AT LEAST ONE of the selected sizes)
+  useEffect(() => {
+    fetchProducts(1, selectedCategory, true);
+  }, [selectedCategory, sortOrder, fetchProducts]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchProducts(currentPage, selectedCategory, false);
+    }
+  }, [currentPage, selectedCategory, fetchProducts]);
+
+  const processedProducts = useMemo(() => {
+    let products = [...allProducts];
+
+    
     if (selectedSizes.length > 0) {
-      products = products.filter(p =>
-        p.availableSizes && selectedSizes.some(s => p.availableSizes.includes(s))
-      );
     }
-
-    // Color Filter (Product must have AT LEAST ONE of the selected colors)
     if (selectedColors.length > 0) {
-       products = products.filter(p =>
-         p.colors && selectedColors.some(selColor => p.colors.includes(selColor))
-      );
     }
 
-    // --- Sorting Logic ---
     switch (sortOrder) {
         case 'gia-thap-cao':
             products.sort((a, b) => a.price - b.price);
@@ -62,75 +115,60 @@ function ProductPage() {
              products.sort((a, b) => b.price - a.price);
             break;
         case 'moi-nhat':
-            // Assuming higher ID means newer, adjust if you have a real date
-             products.sort((a, b) => b.id - a.id);
+             products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             break;
-        case 'ban-chay': // Default - Assuming data is pre-sorted or use reviews/rating
-             products.sort((a, b) => (b.reviews || 0) - (a.reviews || 0)); // Example: sort by reviews desc
+        case 'ban-chay': 
             break;
         default:
-            // Keep original order or default to 'ban-chay'
-             products.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
             break;
     }
 
-
     return products;
-  }, [selectedCategory, selectedSizes, selectedColors, sortOrder]); // Rerun when filters or sort changes
+  }, [allProducts, selectedSizes, selectedColors, sortOrder]);
 
-  // --- Reset pagination when filters change ---
-  useEffect(() => {
-    setVisibleCount(ITEMS_PER_PAGE); // Reset visible count when filters change
-  }, [selectedCategory, selectedSizes, selectedColors, sortOrder]); // Also reset on sort change
 
-  // --- Handlers ---
+  
   const handleCategoryChange = (categoryId) => {
+    setAllProducts([]);
+    setCurrentPage(1);
     setSelectedCategory(categoryId);
   };
-
   const handleSizeChange = (size) => {
     setSelectedSizes(prev =>
       prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
     );
   };
-
   const handleColorChange = (colorHex) => {
     setSelectedColors(prev =>
       prev.includes(colorHex) ? prev.filter(c => c !== colorHex) : [...prev, c]
     );
   };
-
-   const handleSortChange = (newSortOrder) => {
-      setSortOrder(newSortOrder);
-   }
-
-   const handleClearFilters = () => {
-       setSelectedCategory(null);
-       setSelectedSizes([]);
-       setSelectedColors([]);
-       // Optionally reset sort order too, or keep it
-       // setSortOrder('ban-chay');
-   }
-
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    // Simulate network delay for loading more
-    setTimeout(() => {
-      setVisibleCount(prev => prev + ITEMS_PER_PAGE);
-      setIsLoadingMore(false);
-    }, 300); // Simulate delay
+  const handleSortChange = (newSortOrder) => {
+    setAllProducts([]);
+    setCurrentPage(1);
+    setSortOrder(newSortOrder);
+  };
+  const handleClearFilters = () => {
+    const filtersAreActive = selectedCategory || selectedSizes.length > 0 || selectedColors.length > 0;
+    if (filtersAreActive) {
+      setAllProducts([]);
+      setCurrentPage(1);
+    }
+    setSelectedCategory(null);
+    setSelectedSizes([]);
+    setSelectedColors([]);
   };
 
-  // Products to actually display based on pagination
-  const productsToDisplay = useMemo(() => {
-      return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, visibleCount]);
+  const handleLoadMore = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       <div className="flex flex-col lg:flex-row">
         <Sidebar
-          categories={categories}
           sizes={sizes}
           colorsData={colorsData}
           selectedCategory={selectedCategory}
@@ -139,30 +177,33 @@ function ProductPage() {
           onCategoryChange={handleCategoryChange}
           onSizeChange={handleSizeChange}
           onColorChange={handleColorChange}
-          onClearFilters={handleClearFilters} // Pass clear handler
+          onClearFilters={handleClearFilters}
         />
 
         {isLoading ? (
           <div className="flex-1 flex justify-center items-center min-h-[400px]">
-            {/* Add a better spinner component here */}
             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
           </div>
+        ) : error ? (
+           <div className="flex-1 flex justify-center items-center min-h-[400px]">
+             <p className="text-red-600">Lỗi tải dữ liệu: {error}</p>
+           </div>
         ) : (
           <ProductGrid
-            products={productsToDisplay}
-            totalFilteredCount={filteredProducts.length}
-            visibleCount={productsToDisplay.length} // Pass the *actual* number shown
+            products={processedProducts}
+            totalFilteredCount={totalItems} 
+            visibleCount={processedProducts.length} 
             onLoadMore={handleLoadMore}
             isLoadingMore={isLoadingMore}
             selectedSort={sortOrder}
-            onSortChange={handleSortChange} // Pass sort handler
+            onSortChange={handleSortChange}
+            canLoadMore={currentPage < totalPages && !isLoadingMore}
           />
         )}
       </div>
-       {/* Floating Zalo Button */}
-       <button className="fixed bottom-5 right-5 z-50 bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors duration-200">
-         <img src="/images/zalo-icon.svg" alt="Zalo" className="h-6 w-6" /> {/* Use your Zalo icon */}
-       </button>
+      <button className="fixed bottom-5 right-5 z-50 bg-blue-500 rounded-full p-3 shadow-lg hover:bg-blue-600 transition-colors duration-200">
+        <img src="/images/zalo-icon.svg" alt="Zalo" className="h-6 w-6" />
+      </button>
     </div>
   );
 }

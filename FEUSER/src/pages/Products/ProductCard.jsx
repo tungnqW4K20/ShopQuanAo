@@ -1,6 +1,6 @@
 import React from 'react';
 import { StarIcon } from '@heroicons/react/24/solid';
-import { findColorClass } from './data'; // Ensure this helper exists and works
+import { findColorClass } from './data'; 
 
 const ProductCard = ({ product }) => {
   const {
@@ -26,7 +26,6 @@ const ProductCard = ({ product }) => {
   }
 
   const getBadgeStyle = () => {
-    // ... (getBadgeStyle function remains the same)
      switch (badge) {
       case 'ĐANG MUA':
       case 'BÁN CHẠY':
@@ -45,27 +44,24 @@ const ProductCard = ({ product }) => {
   };
 
   const getBadgeText = () => {
-    // ... (getBadgeText function remains the same)
      if (badge?.startsWith('VOUCHER') || badge === 'GIẢM GIÁ') return 'GIẢM GIÁ';
      if (badge === 'TẶNG QUÀ') return 'QUÀ TẶNG';
      return badge;
   }
 
-  // Min-heights for consistency (optional but helpful)
   const colorSwatchSectionHeight = colors.length > 0 ? 'min-h-[28px]' : 'min-h-[0px]';
   const ratingSectionHeight = rating ? 'min-h-[32px]' : 'min-h-[0px]';
 
   return (
     <div className="group relative flex flex-col h-full border border-transparent hover:border-gray-200 hover:shadow-md transition duration-200 ease-in-out rounded-lg overflow-hidden">
       
-      <div className="relative w-full overflow-hidden bg-gray-100 h-72"> {/* <<< FIXED HEIGHT APPLIED HERE */}
+      <div className="relative w-full overflow-hidden bg-gray-100 h-72"> 
         {/* Badge */}
         {badge && (
           <span className={`absolute top-2 left-2 z-10 inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium ${getBadgeStyle()}`}>
             {getBadgeText()}
           </span>
         )}
-        {/* Image Tag - object-cover is crucial here */}
         <img
           src={imageUrl || 'https://via.placeholder.com/300x400'}
           alt={name}
@@ -133,8 +129,8 @@ const ProductCard = ({ product }) => {
             </p>
           )}
         </div>
-      </div> {/* End Details Container */}
-    </div> // End Card
+      </div> 
+    </div> 
   );
 };
 

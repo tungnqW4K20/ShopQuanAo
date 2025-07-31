@@ -219,6 +219,45 @@ const getDetailsById = async (req, res, next) => {
 };
 
 
+const getByCategory = async (req, res, next) => {
+    try {
+        // Lấy categoryId từ path parameters
+        const { categoryId } = req.params;
+        // Lấy tham số phân trang từ query string
+        const { limit = 10, page = 1 } = req.query;
+
+        // Kiểm tra ID danh mục có hợp lệ không
+        if (isNaN(parseInt(categoryId))) {
+            return res.status(400).json({ success: false, message: 'ID danh mục không hợp lệ.' });
+        }
+
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+        
+        
+        const queryParams = { 
+            limit: parseInt(limit), 
+            offset, 
+            categoryId: parseInt(categoryId) 
+        };
+
+        const { rows: products, count } = await productService.getAllProducts(queryParams);
+        
+        res.status(200).json({
+            success: true,
+            data: products,
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / parseInt(limit)),
+                currentPage: parseInt(page),
+                pageSize: parseInt(limit)
+            }
+        });
+    } catch (error) {
+        console.error("Get Products By Category Error:", error.message);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy sản phẩm theo danh mục.' });
+    }
+};
+
 
 
 
@@ -230,5 +269,6 @@ module.exports = {
     deleteProduct: deleteProductController ,
     getPaginateFeature,
     getVariants,
-    getDetailsById
+    getDetailsById,
+    getByCategory
 };
