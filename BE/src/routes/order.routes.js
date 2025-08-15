@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/', authenticateToken, orderController.create);
 router.get('/', authenticateToken, orderController.getMyOrders);
+router.get('/customer', authenticateToken, orderController.getByCustomerId);
 router.get('/:id', authenticateToken, orderController.getMyOrderById);
 router.get('/admin/all', authenticateToken, authorizeRole("admin"), orderController.getAllOrdersAdmin);
 
@@ -18,7 +19,6 @@ router.patch('/admin/orders/:id/status',
     orderController.updateOrderStatusAdmin
 );
 
-// API để Admin lấy danh sách các trạng thái đơn hàng khả dụng
 router.get('/admin/statuses',
     authenticateToken,
     authorizeRole("admin"),

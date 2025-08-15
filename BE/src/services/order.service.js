@@ -171,36 +171,36 @@ const createOrder = async (orderData) => {
 };
 
 
-const getOrdersByCustomerId = async (customerId, options = {}) => {
-    const page = parseInt(options.page, 10) || 1;
-    const limit = parseInt(options.limit, 10) || 10;
-    const offset = (page - 1) * limit;
+// const getOrdersByCustomerId = async (customerId, options = {}) => {
+//     const page = parseInt(options.page, 10) || 1;
+//     const limit = parseInt(options.limit, 10) || 10;
+//     const offset = (page - 1) * limit;
 
-    const { count, rows } = await Order.findAndCountAll({
-        where: { customer_id: customerId },
-        include: [
-            {
-                model: OrderDetail,
-                as: 'orderDetails',
-                include: [
-                    { model: Product, as: 'product', attributes: ['id', 'name', 'image_url'] },
-                    { model: ColorProduct, as: 'colorVariant', attributes: ['id', 'name'] },
-                    { model: SizeProduct, as: 'sizeVariant', attributes: ['id', 'name'] }
-                ]
-            }
-        ],
-        order: [['orderdate', 'DESC']],
-        limit,
-        offset
-    });
+//     const { count, rows } = await Order.findAndCountAll({
+//         where: { customer_id: customerId },
+//         include: [
+//             {
+//                 model: OrderDetail,
+//                 as: 'orderDetails',
+//                 include: [
+//                     { model: Product, as: 'product', attributes: ['id', 'name', 'image_url'] },
+//                     { model: ColorProduct, as: 'colorVariant', attributes: ['id', 'name'] },
+//                     { model: SizeProduct, as: 'sizeVariant', attributes: ['id', 'name'] }
+//                 ]
+//             }
+//         ],
+//         order: [['orderdate', 'DESC']],
+//         limit,
+//         offset
+//     });
 
-    return {
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
-        totalOrders: count,
-        orders: rows
-    };
-};
+//     return {
+//         totalPages: Math.ceil(count / limit),
+//         currentPage: page,
+//         totalOrders: count,
+//         orders: rows
+//     };
+// };
 
 
 const getOrderById = async (orderId, customerId = null) => {
@@ -307,6 +307,61 @@ const getAvailableOrderStatuses = () => {
         };
     });
 };
+
+const getOrdersByCustomerId = async (customerId) => {
+    const customer = await db.Customer.findByPk(customerId);
+    if (!customer) {
+        throw new Error(`Không tìm thấy khách hàng với ID ${customerId}.`);
+    }
+
+    const orders = await db.Order.findAll({
+        where: { customer_id: customerId },
+        order: [['orderdate', 'DESC']], 
+        
+        include: [
+            {
+                model: db.OrderDetail,
+                as: 'orderDetails', 
+                required: true,
+                include: [
+                    {
+                        model: db.Product,
+                        as: 'product',
+                        attributes: ['name', 'description'] 
+                    },
+                    {
+                        model: db.ColorProduct,
+                        as: 'colorVariant',
+                        attributes: ['name', 'colorCode', 'image_urls'] 
+                    },
+                    {
+                        model: db.SizeProduct,
+                        as: 'sizeVariant',
+                        attributes: ['name'] 
+                    }
+                ]
+            }
+        ]
+    });
+
+    
+    const plainOrders = orders.map(order => order.get({ plain: true }));
+
+    plainOrders.forEach(order => {
+        let totalAmount = 0;
+        
+        order.orderDetails.forEach(detail => {
+            const price = parseFloat(detail.price);
+            detail.subtotal = detail.quantity * price;
+            totalAmount += detail.subtotal;
+        });
+
+        order.totalAmount = totalAmount;
+    });
+
+    return plainOrders;
+};
+
 
 
 module.exports = {

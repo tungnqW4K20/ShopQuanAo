@@ -359,7 +359,7 @@ const Header = () => {
                 </div>
               </div>
               {isAuthenticated && 
-                <Link to="/account" className="text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Tài khoản">
+                <Link to="/profile" className="text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Tài khoản">
                   <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
                 </Link>
               }

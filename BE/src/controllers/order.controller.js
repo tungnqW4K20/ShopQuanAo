@@ -184,12 +184,31 @@ const getOrderStatusesAdmin = (req, res, next) => {
     }
 };
 
+const getByCustomerId = async (req, res, next) => {
+    try {
+        const loggedInUser = req.user; 
+        const orders = await orderService.getOrdersByCustomerId(loggedInUser.id);
+        res.status(200).json({
+            success: true,
+            data: orders
+        });
+
+    } catch (error) {
+        console.error("Get Orders By Customer ID Error:", error.message);
+        if (error.message.includes('Không tìm thấy')) {
+            return res.status(404).json({ success: false, message: error.message }); // 404 Not Found
+        }
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ nội bộ khi lấy lịch sử đơn hàng.' });
+    }
+};
+
 module.exports = {
     create,
     getMyOrders,
     getMyOrderById,
     getAllOrdersAdmin,
     updateOrderStatusAdmin,  
-    getOrderStatusesAdmin
+    getOrderStatusesAdmin,
+    getByCustomerId
 };
 
