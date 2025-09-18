@@ -172,12 +172,13 @@ function ManageCategories() {
         )}
       </div>
 
-      <CategoryModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSubmit={handleSaveCategory}
-        category={currentCategory}
-      />
+      { isModalOpen && 
+        <CategoryModal
+          onClose={handleCloseModal}
+          onSubmit={handleSaveCategory}
+          category={currentCategory}
+        />
+      }
 
       <ConfirmDeleteModal
         isOpen={isDeleteDialogOpen}
@@ -191,3 +192,4 @@ function ManageCategories() {
 }
 
 export default ManageCategories;
+

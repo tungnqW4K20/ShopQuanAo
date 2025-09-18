@@ -1,77 +1,148 @@
-// src/components/admin/CategoryModal.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import uploadApiService from '../../services/uploadApiService';
+import { AiOutlineCloudUpload, AiOutlineClose } from 'react-icons/ai';
 
-function CategoryModal({ isOpen, onClose, onSubmit, category }) {
+function CategoryModal({ onClose, onSubmit, category }) {
   const [name, setName] = useState('');
+  const [imageUrl, setImageUrl] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
 
-  // Cập nhật state name khi category prop thay đổi (cho edit mode)
   useEffect(() => {
-    
-    if (category) {
-      setName(category.name);
-    } else {
-      setName(''); // Reset cho add mode
-    }
-    setError(''); // Reset lỗi khi mở modal hoặc đổi category
-  }, [category, isOpen]); // Chạy lại khi category thay đổi hoặc modal mở
+      if (category) {
+        setName(category.name);
+        setImageUrl(category.image_url);
+      } else {
+        setName('');
+        setImageUrl(null);
+      }
+      setSelectedFile(null);
+      setError('');
+      setIsUploading(false);
+  }, [category]);
 
-  const handleSubmit = (e) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setImageUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setImageUrl(null);
+    if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
       setError('Tên danh mục không được để trống.');
       return;
     }
-    onSubmit({ name }); // Gửi object chứa name lên component cha
-    // Việc đóng modal và reset state được thực hiện ở component cha sau khi submit thành công/thất bại
+    setError('');
+
+    let finalImageUrl = category?.image_url;
+
+    if (imageUrl === null && category?.image_url) {
+        finalImageUrl = null;
+    }
+
+    try {
+        if (selectedFile) {
+            setIsUploading(true);
+            finalImageUrl = await uploadApiService.uploadProductImage(selectedFile);
+            setIsUploading(false);
+        }
+        
+        onSubmit({ name, image_url: finalImageUrl });
+
+    } catch (uploadError) {
+        setIsUploading(false);
+        setError(uploadError.message);
+    }
   };
 
   const handleClose = () => {
-      setName(''); // Reset name khi đóng bằng nút cancel
-      setError('');
-      onClose();
+    onClose();
   }
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md transform transition-all duration-300 ease-in-out scale-100">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          {category ? 'Sửa Danh mục' : 'Thêm Danh mục Mới'}
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700 mb-1">
-              Tên Danh mục <span className="text-red-500">*</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+      <div className="relative bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg mx-4">
+        <div className="flex justify-between items-center pb-3 border-b">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {category ? 'Chỉnh Sửa Danh Mục' : 'Tạo Danh Mục Mới'}
+            </h2>
+            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 p-1">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          <div>
+            <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700 mb-2">
+              Tên Danh mục <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
               id="categoryName"
               value={name}
-              onChange={(e) => {
-                  setName(e.target.value);
-                  if(error) setError(''); // Xóa lỗi khi user bắt đầu nhập
-              }}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-indigo-500'} sm:text-sm`}
-              placeholder="Nhập tên danh mục..."
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 border rounded-md focus:ring-2 border-gray-300 focus:border-blue-500 focus:ring-blue-300"
+              placeholder="Ví dụ: Áo thun, Quần jeans..."
               required
             />
-             {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
           </div>
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out"
-            >
-              Hủy
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh Danh mục</label>
+            <div className="mt-1 flex items-center space-x-4">
+                <div className="w-24 h-24 rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                    {imageUrl ? (
+                        <img src={imageUrl} alt="Preview" className="w-full h-full object-cover"/>
+                    ) : (
+                        <span className="text-gray-400 text-sm text-center">Xem trước</span>
+                    )}
+                </div>
+                <div className="flex flex-col space-y-2">
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleFileChange}
+                        className="hidden"
+                        ref={fileInputRef}
+                    />
+                    <button type="button" onClick={() => fileInputRef.current.click()} className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <AiOutlineCloudUpload className="mr-2"/>
+                        Chọn ảnh
+                    </button>
+                    {imageUrl && (
+                        <button type="button" onClick={handleRemoveImage} className="flex items-center px-4 py-2 bg-red-50 border border-red-200 rounded-md text-sm font-medium text-red-600 hover:bg-red-100">
+                           <AiOutlineClose className="mr-2"/>
+                            Xóa ảnh
+                        </button>
+                    )}
+                </div>
+            </div>
+          </div>
+          
+          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+
+          <div className="flex justify-end items-center space-x-4 pt-4">
+            <button type="button" onClick={handleClose} className="px-5 py-2.5 bg-gray-100 text-gray-800 rounded-md font-semibold hover:bg-gray-200">
+              Hủy Bỏ
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+              disabled={isUploading}
+              className="px-5 py-2.5 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center"
             >
-              {category ? 'Lưu thay đổi' : 'Thêm mới'}
+              {isUploading ? 'Đang tải lên...' : (category ? 'Lưu Thay Đổi' : 'Thêm Mới')}
             </button>
           </div>
         </form>
