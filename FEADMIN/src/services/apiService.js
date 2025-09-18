@@ -1,16 +1,21 @@
 import axios from 'axios';
 
+//khai báo hàm thay vì khóa vì axios sẽ lưu token setup chứ ko phải  token cập nhật state nên phải gọi lại hàm để lấy
 let _getAuthTokenFunction = () => null;
 
+
+// đăng ký lấy token
 export const setGlobalAuthTokenGetter = (getterFunction) => {
   _getAuthTokenFunction = getterFunction;
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://benodejs-9.onrender.com/api';
 
 const getToken = () => {
   return _getAuthTokenFunction();
 };
+
+
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

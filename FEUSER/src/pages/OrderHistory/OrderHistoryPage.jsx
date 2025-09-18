@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext'; // Đảm bảo đường dẫn đúng
+import { useAuth } from '../../context/AuthContext'; 
 import { FiPackage, FiCalendar, FiHash, FiLoader, FiAlertTriangle } from 'react-icons/fi';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -31,7 +31,7 @@ const OrderHistoryPage = () => {
         const fetchOrderHistory = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get('http://localhost:3000/api/orders/customer', {
+                const response = await axios.get('https://benodejs-9.onrender.com/api/orders/customer', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setOrders(response.data.success ? response.data.data : []);

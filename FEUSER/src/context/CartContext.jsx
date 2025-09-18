@@ -34,7 +34,7 @@ export const CartProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:3000/api/carts', {
+      const response = await axios.get('https://benodejs-9.onrender.com/api/carts', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.data.success) {
@@ -58,7 +58,7 @@ export const CartProvider = ({ children }) => {
     if (!isAuthenticated) throw new Error("Vui lòng đăng nhập để thực hiện chức năng này.");
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:3000/api/carts', cartItemPayload, {
+      await axios.post('https://benodejs-9.onrender.com/api/carts', cartItemPayload, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       await fetchCart();
@@ -74,7 +74,7 @@ export const CartProvider = ({ children }) => {
   const updateCartItem = async (itemId, newQuantity) => {
     setIsLoading(true);
     try {
-      await axios.put(`http://localhost:3000/api/carts/${itemId}`, { quantity: newQuantity }, {
+      await axios.put(`https://benodejs-9.onrender.com/api/carts/${itemId}`, { quantity: newQuantity }, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       await fetchCart();
@@ -89,7 +89,7 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (itemId) => {
     setIsLoading(true);
     try {
-      await axios.delete(`http://localhost:3000/api/carts/${itemId}`, {
+      await axios.delete(`https://benodejs-9.onrender.com/api/carts/${itemId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       await fetchCart();

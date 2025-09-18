@@ -12,6 +12,7 @@ const getAllCategories = async () => {
   }
 };
 
+
 const getCategoryById = async (id) => {
   const response = await request({ method: 'get', url: `${API_ENDPOINT}/${id}` });
   if (response && response.success) {
@@ -20,6 +21,7 @@ const getCategoryById = async (id) => {
     throw new Error(response?.message || `Không thể lấy danh mục ID ${id} từ API.`);
   }
 };
+
 
 const createCategory = async (categoryData) => {
   const response = await request({ method: 'post', url: API_ENDPOINT, data: categoryData });

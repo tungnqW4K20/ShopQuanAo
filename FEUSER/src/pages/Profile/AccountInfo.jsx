@@ -19,7 +19,7 @@ const AccountInfo = () => {
                 setIsLoading(true);
                 setError(null);
                 try {
-                    const response = await axios.get(`http://localhost:3000/api/customers/${user.id}`, {
+                    const response = await axios.get(`https://benodejs-9.onrender.com/api/customers/${user.id}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (response.data.success) {
@@ -52,7 +52,7 @@ const AccountInfo = () => {
         setUpdateMessage({ type: '', text: '' });
         try {
             const response = await axios.put(
-                `http://localhost:3000/api/customers/${user.id}`,
+                `https://benodejs-9.onrender.com/api/customers/${user.id}`,
                 formData,
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );

@@ -202,7 +202,7 @@ function ShoppingCartPage() {
     };
 
     try {
-        const response = await axios.post('http://localhost:3000/api/orders', orderPayload, {
+        const response = await axios.post('https://benodejs-9.onrender.com/api/orders', orderPayload, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 

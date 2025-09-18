@@ -13,6 +13,8 @@ const getAllOrders = async () => {
   throw new Error(response?.message || 'Không thể tải danh sách đơn hàng.');
 };
 
+
+
 // Lấy tất cả khách hàng
 const getAllCustomers = async () => {
   const response = await request({
@@ -31,3 +33,4 @@ const dashboardApiService = {
 };
 
 export default dashboardApiService;
+

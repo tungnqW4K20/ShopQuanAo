@@ -49,14 +49,16 @@ function ProductPage() {
 
     let apiUrl;
     if (category) {
-      apiUrl = `http://localhost:3000/api/products/category/${category}?page=${page}&limit=${ITEMS_PER_PAGE}`;
+      apiUrl = `https://benodejs-9.onrender.com/api/products/category/${category}?page=${page}&limit=${ITEMS_PER_PAGE}`;
     } else {
-      apiUrl = `http://localhost:3000/api/products/?page=${page}&limit=${ITEMS_PER_PAGE}`;
+      apiUrl = `https://benodejs-9.onrender.com/api/products/?page=${page}&limit=${ITEMS_PER_PAGE}`;
     }
 
     
 
     try {
+      debugger
+
       const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);

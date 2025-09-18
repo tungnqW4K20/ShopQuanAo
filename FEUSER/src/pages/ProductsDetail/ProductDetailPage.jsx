@@ -108,10 +108,12 @@ function ProductDetailPage() {
 
   useEffect(() => {
     const fetchProduct = async () => {
+            console.log("sssssss")
+
         setIsLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`http://localhost:3000/api/products/${productId}/details`);
+            const response = await axios.get(`https://benodejs-9.onrender.com/api/products/${productId}/details`);
             if (response.data.success) {
                 const transformedData = transformApiDataToComponentProps(response.data.data);
                 setProduct(transformedData);

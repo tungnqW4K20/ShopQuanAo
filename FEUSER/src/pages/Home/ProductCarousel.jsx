@@ -5,7 +5,7 @@ import ProductCard from './ProductCard';
 
 const CAROUSEL_TITLE = "SẢN PHẨM MẶC HẰNG NGÀY";
 const SEE_MORE_LINK = "/care-share";
-const API_ENDPOINT = 'http://localhost:3000/api/products/get-paginate-featured';
+const API_ENDPOINT = 'https://benodejs-9.onrender.com/api/products/get-paginate-featured';
 // --- THAY ĐỔI 1: Cập nhật PAGE_SIZE ---
 const PAGE_SIZE = 6; // Số sản phẩm trên mỗi trang
 
@@ -45,6 +45,7 @@ const ProductCarousel = () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
+      console.log("sssssss")
       const response = await fetch(`${API_ENDPOINT}?limit=${PAGE_SIZE}&page=${pageToFetch}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const result = await response.json();

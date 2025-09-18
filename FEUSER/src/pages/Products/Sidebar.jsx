@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
+import axios from 'axios'; // Sử dụng axios để nhất quán với các component khác
 
 // FilterGroup không thay đổi
 const FilterGroup = ({ title, children, defaultOpen = true }) => {
@@ -46,9 +47,8 @@ const SizeButton = ({ size, selected, onClick }) => (
 );
 
 
-// *** COMPONENT SIDEBAR ĐƯỢC CẬP NHẬT ***
+// COMPONENT SIDEBAR ĐÃ ĐƯỢC CẬP NHẬT API ENDPOINT
 const Sidebar = ({
-  // categories không còn được truyền vào từ props
   sizes,
   colorsData,
   selectedCategory,
@@ -66,25 +66,22 @@ const Sidebar = ({
 
   // 2. useEffect để gọi API khi component được mount
   useEffect(() => {
-    // Hàm async để gọi API
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/categories/');
-        if (!response.ok) {
-          throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);
-        }
-        const result = await response.json();
+        // *** THAY ĐỔI DUY NHẤT: Cập nhật URL của API ***
+        const response = await axios.get('https://benodejs-9.onrender.com/api/categories');
         
-        // Dựa trên cấu trúc JSON bạn cung cấp, dữ liệu nằm trong `result.data`
-        if (result.success && Array.isArray(result.data)) {
-          setCategories(result.data);
+        // Dựa trên cấu trúc JSON, dữ liệu nằm trong `response.data.data`
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+          setCategories(response.data.data);
         } else {
            throw new Error('Định dạng dữ liệu API không đúng');
         }
 
-      } catch (error) {
-        console.error("Không thể tải danh mục:", error);
-        setError(error.message);
+      } catch (err) {
+        console.error("Không thể tải danh mục:", err);
+        // Lưu thông báo lỗi để hiển thị cho người dùng
+        setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu.');
       } finally {
         setIsLoading(false);
       }
@@ -93,7 +90,9 @@ const Sidebar = ({
     fetchCategories();
   }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy một lần
 
+  // Hàm xử lý khi người dùng chọn một danh mục
   const handleCategoryClick = (categoryId) => {
+      // Nếu danh mục đã được chọn, bỏ chọn nó (truyền null). Nếu không, chọn nó.
       onCategoryChange(selectedCategory === categoryId ? null : categoryId);
   }
 
@@ -102,7 +101,7 @@ const Sidebar = ({
        <div className="mb-4 text-right">
            <button
              onClick={onClearFilters}
-             className="text-xs text-gray-500 hover:text-indigo-600 underline"
+             className="text-xs text-gray-500 hover:text-indigo-600 underline disabled:text-gray-300 disabled:cursor-not-allowed"
              disabled={!selectedCategory && selectedSizes.length === 0 && selectedColors.length === 0}
            >
              Xóa bộ lọc

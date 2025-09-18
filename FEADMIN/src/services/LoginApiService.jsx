@@ -1,6 +1,6 @@
 import axios from 'axios'; // Cài đặt: npm install axios
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'; // Lấy từ biến môi trường hoặc mặc định
+const API_URL = import.meta.env.VITE_API_URL || 'https://benodejs-9.onrender.com/api'; // Lấy từ biến môi trường hoặc mặc định
 
 const apiClient = axios.create({
   baseURL: API_URL,

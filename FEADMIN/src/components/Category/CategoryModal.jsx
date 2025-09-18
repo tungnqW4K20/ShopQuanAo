@@ -7,6 +7,7 @@ function CategoryModal({ isOpen, onClose, onSubmit, category }) {
 
   // Cập nhật state name khi category prop thay đổi (cho edit mode)
   useEffect(() => {
+    
     if (category) {
       setName(category.name);
     } else {

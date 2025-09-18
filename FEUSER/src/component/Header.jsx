@@ -4,10 +4,32 @@ import { FiSearch, FiUser, FiShoppingBag, FiMenu, FiX, FiStar } from 'react-icon
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 import { useAuth } from '../context/AuthContext';
-import CartPopup from './CartPopup'; // 1. Import component giỏ hàng mini
-import axios from 'axios';           // 2. Import axios để gọi API
+import CartPopup from './CartPopup';
+import axios from 'axios';
 import { useCart } from '../context/CartContext';
 
+// HÀM TIỆN ÍCH
+// Chuyển đổi chuỗi thành dạng slug URL thân thiện (ví dụ: "Áo Hoodie Nam" -> "ao-hoodie-nam")
+const slugify = (str) => {
+  str = str.replace(/^\s+|\s+$/g, ''); // trim
+  str = str.toLowerCase();
+
+  // Bỏ dấu tiếng Việt
+  const from = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ·/_,:;";
+  const to = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd------";
+  for (let i = 0, l = from.length; i < l; i++) {
+    str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+  }
+
+  str = str.replace(/[^a-z0-9 -]/g, '') // Xóa các ký tự không hợp lệ
+    .replace(/\s+/g, '-') // Thay thế khoảng trắng bằng gạch nối
+    .replace(/-+/g, '-'); // Xóa các gạch nối liền kề
+
+  return str;
+};
+
+
+// COMPONENT CON
 // Component Link cho dropdown menu
 const DropdownLink = ({ to, children }) => (
   <Link to={to} className="block py-1 text-sm text-gray-700 hover:text-blue-600 hover:font-medium transition-colors">
@@ -15,8 +37,8 @@ const DropdownLink = ({ to, children }) => (
   </Link>
 );
 
-// Các component MegaMenu (giữ nguyên không thay đổi)
-const MegaMenuNam = () => (
+// MegaMenu cho Nam - Nhận danh mục động từ props
+const MegaMenuNam = ({ categories }) => (
   <div className="grid grid-cols-4 gap-x-8 gap-y-4">
     <div>
       <Link to="/tat-ca-san-pham-nam" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">TẤT CẢ SẢN PHẨM →</Link>
@@ -36,15 +58,20 @@ const MegaMenuNam = () => (
     </div>
 
     <div>
-      <Link to="/ao-nam" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">ÁO NAM →</Link>
+      <Link to="/products" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">DANH MỤC NAM →</Link>
       <ul>
-        <li><DropdownLink to="/ao-tanktop-nam">Áo Tanktop</DropdownLink></li>
-        <li><DropdownLink to="/ao-thun-nam">Áo Thun</DropdownLink></li>
-        <li><DropdownLink to="/ao-the-thao-nam">Áo Thể Thao</DropdownLink></li>
-        <li><DropdownLink to="/ao-polo-nam">Áo Polo</DropdownLink></li>
-        <li><DropdownLink to="/ao-so-mi-nam">Áo Sơ Mi</DropdownLink></li>
-        <li><DropdownLink to="/ao-dai-tay-nam">Áo Dài Tay</DropdownLink></li>
-        <li><DropdownLink to="/ao-khoac-nam">Áo Khoác</DropdownLink></li>
+        {categories.length > 0 ? (
+          categories.map(category => (
+            <li key={category.id}>
+              {/* Sử dụng hàm slugify để tạo link */}
+              <DropdownLink to={`/category/${slugify(category.name)}`}>
+                {category.name}
+              </DropdownLink>
+            </li>
+          ))
+        ) : (
+          <li><p className="text-sm text-gray-500">Đang tải danh mục...</p></li>
+        )}
       </ul>
     </div>
 
@@ -87,7 +114,8 @@ const MegaMenuNam = () => (
   </div>
 );
 
-const MegaMenuNu = () => (
+// MegaMenu cho Nữ - Nhận danh mục động từ props
+const MegaMenuNu = ({ categories }) => (
     <div className="grid grid-cols-4 gap-x-8 gap-y-4">
     <div>
       <Link to="/tat-ca-san-pham-nu" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">TẤT CẢ SẢN PHẨM →</Link>
@@ -100,12 +128,20 @@ const MegaMenuNu = () => (
       </ul>
     </div>
     <div>
-      <Link to="/ao-nu" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">ÁO NỮ →</Link>
-      <ul>
-        <li><DropdownLink to="/ao-sport-bra-nu">Áo Sport Bra</DropdownLink></li>
-        <li><DropdownLink to="/ao-croptop-nu">Áo Croptop</DropdownLink></li>
-        <li><DropdownLink to="/ao-singlet-nu">Áo Singlet</DropdownLink></li>
-        <li><DropdownLink to="/ao-thun-nu">Áo Thun</DropdownLink></li>
+      <Link to="/nu" className="block text-sm font-bold text-gray-900 mb-2 hover:text-blue-600">DANH MỤC NỮ →</Link>
+       <ul>
+        {categories.length > 0 ? (
+          categories.map(category => (
+            <li key={category.id}>
+              {/* Sử dụng hàm slugify để tạo link */}
+              <DropdownLink to={`/category/${slugify(category.name)}`}>
+                {category.name}
+              </DropdownLink>
+            </li>
+          ))
+        ) : (
+          <li><p className="text-sm text-gray-500">Đang tải danh mục...</p></li>
+        )}
       </ul>
     </div>
      <div className="grid grid-rows-2 gap-y-6">
@@ -222,24 +258,47 @@ const MegaMenuCareShare = () => (
 );
 
 
+// COMPONENT CHÍNH
 const Header = () => {
-  // State cho các chức năng cũ
+  // State cho các chức năng UI
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuTimeoutId, setMenuTimeoutId] = useState(null);
   const [dropdownTimeoutId, setDropdownTimeoutId] = useState(null);
-
-  // 3. Các state mới để quản lý giỏ hàng và popup
   const [isCartPopupOpen, setIsCartPopupOpen] = useState(false);
   const [cartPopupTimeoutId, setCartPopupTimeoutId] = useState(null);
   
-  // Lấy thông tin xác thực từ Context
-  const { user, isAuthenticated, logout, token } = useAuth();
+  // State mới để lưu trữ danh mục từ API
+  const [maleCategories, setMaleCategories] = useState([]);
+  const [femaleCategories, setFemaleCategories] = useState([]);
+
+  // Lấy thông tin từ Context
+  const { user, isAuthenticated, logout } = useAuth();
   const { cartItemCount, cartItems } = useCart();
 
-  // Các hàm xử lý chức năng cũ (giữ nguyên không thay đổi)
+  // Gọi API để lấy danh mục khi component được render lần đầu
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('https://benodejs-9.onrender.com/api/categories');
+        if (response.data && response.data.success) {
+          const allCategories = response.data.data;
+          
+          // Tự động lọc và phân loại danh mục vào state tương ứng
+          setMaleCategories(allCategories.filter(cat => cat.name.toLowerCase().includes('nam')));
+          setFemaleCategories(allCategories.filter(cat => cat.name.toLowerCase().includes('nữ')));
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu danh mục:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []); // Mảng rỗng `[]` đảm bảo useEffect chỉ chạy một lần sau khi component mount
+
+  // Các hàm xử lý sự kiện
   const toggleMobileMenu = () => { setIsMobileMenuOpen(!isMobileMenuOpen); };
   const openLoginModal = () => { setIsRegisterModalOpen(false); setIsLoginModalOpen(true); setIsMobileMenuOpen(false); setActiveMenu(null); };
   const closeLoginModal = () => setIsLoginModalOpen(false);
@@ -253,18 +312,14 @@ const Header = () => {
   const handleMouseLeaveDropdown = () => { const timeoutId = setTimeout(() => { setActiveMenu(null); }, 150); setDropdownTimeoutId(timeoutId); };
   const handleLogout = () => { logout(); };
 
-  // 5. Các hàm mới để xử lý popup giỏ hàng
   const handleMouseEnterCart = () => {
     if (cartPopupTimeoutId) clearTimeout(cartPopupTimeoutId);
-    // Chỉ mở popup nếu đã đăng nhập và có sản phẩm trong giỏ
     if (isAuthenticated && cartItems.length > 0) {
       setIsCartPopupOpen(true);
     }
   };
 
   const handleMouseLeaveCart = () => {
-    // Đặt một khoảng thời gian chờ trước khi đóng popup.
-    // Điều này cho phép người dùng di chuột từ icon vào popup mà không làm nó bị đóng.
     const timeoutId = setTimeout(() => {
       setIsCartPopupOpen(false);
     }, 200);
@@ -363,7 +418,6 @@ const Header = () => {
                   <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
                 </Link>
               }
-              {/* 6. Khu vực giỏ hàng đã được cập nhật */}
               <div
                 className="relative"
                 onMouseEnter={handleMouseEnterCart}
@@ -371,7 +425,6 @@ const Header = () => {
               >
                 <Link to="/cart" className="relative text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Giỏ hàng">
                   <FiShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
-                  {/* Chỉ hiển thị số lượng khi đã đăng nhập và có sản phẩm */}
                   {isAuthenticated && cartItemCount > 0 && (
                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center pointer-events-none">
                        {cartItemCount}
@@ -379,7 +432,6 @@ const Header = () => {
                   )}
                 </Link>
 
-                {/* Hiển thị popup giỏ hàng mini một cách có điều kiện */}
                 {isCartPopupOpen && <CartPopup items={cartItems} onClose={closeCartPopup} />}
               </div>
 
@@ -396,8 +448,9 @@ const Header = () => {
              onMouseLeave={handleMouseLeaveDropdown}
            >
                 <div className="container mx-auto px-4 py-6">
-                    {activeMenu === 'nam' && <MegaMenuNam />}
-                    {activeMenu === 'nu' && <MegaMenuNu />}
+                    {/* Truyền state danh mục tương ứng vào component con */}
+                    {activeMenu === 'nam' && <MegaMenuNam categories={maleCategories} />}
+                    {activeMenu === 'nu' && <MegaMenuNu categories={femaleCategories} />}
                     {activeMenu === 'the-thao' && <MegaMenuTheThao />}
                     {activeMenu === 'care-share' && <MegaMenuCareShare />}
                 </div>

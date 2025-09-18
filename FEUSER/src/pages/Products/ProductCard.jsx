@@ -1,6 +1,10 @@
 import React from 'react';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { findColorClass } from './data'; 
+import { Link } from 'react-router-dom';
+
+
+
 
 const ProductCard = ({ product }) => {
   const {
@@ -24,6 +28,8 @@ const ProductCard = ({ product }) => {
     if (value === null || value === undefined) return '';
     return value.toLocaleString('vi-VN') + 'đ';
   }
+
+  
 
   const getBadgeStyle = () => {
      switch (badge) {
@@ -52,6 +58,7 @@ const ProductCard = ({ product }) => {
   const colorSwatchSectionHeight = colors.length > 0 ? 'min-h-[28px]' : 'min-h-[0px]';
   const ratingSectionHeight = rating ? 'min-h-[32px]' : 'min-h-[0px]';
 
+
   return (
     <div className="group relative flex flex-col h-full border border-transparent hover:border-gray-200 hover:shadow-md transition duration-200 ease-in-out rounded-lg overflow-hidden">
       
@@ -62,11 +69,13 @@ const ProductCard = ({ product }) => {
             {getBadgeText()}
           </span>
         )}
-        <img
-          src={imageUrl || 'https://via.placeholder.com/300x400'}
-          alt={name}
-          className="h-full w-full object-cover object-center group-hover:opacity-85 transition-opacity duration-200" // Will cover the fixed height container
-        />
+        <Link to={`/products/${product.id}`}>
+          <img
+            src={imageUrl || 'https://via.placeholder.com/300x400'}
+            alt={name}
+            className="h-full w-full object-cover object-center group-hover:opacity-85 transition-opacity duration-200" // Will cover the fixed height container
+          />
+        </Link>
         {/* Offer/Voucher Banner */}
         {(offerText || voucher) && (
            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end justify-center pb-1 px-2">
@@ -99,12 +108,12 @@ const ProductCard = ({ product }) => {
         </div>
 
         {/* Product Name */}
-        <h3 className="text-sm text-gray-800 font-medium hover:text-indigo-600 h-10 mb-1 line-clamp-2">
-          <a href="#" title={name}>
-            <span aria-hidden="true" className="absolute inset-0 z-0" />
-            {name}
-          </a>
-        </h3>
+       <h3 className="text-sm text-gray-800 font-medium hover:text-indigo-600 h-10 mb-1 line-clamp-2">
+        <Link to={`/products/${product.id}`} title={name}>
+          <span aria-hidden="true" className="absolute inset-0 z-0" />
+          {name}
+        </Link>
+      </h3>
 
         {/* Rating */}
         <div className={`flex items-center ${ratingSectionHeight}`}>

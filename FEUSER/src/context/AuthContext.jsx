@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 const AuthContext = createContext(null);
 
 // API URL (nên đặt trong file .env ở dự án thực tế)
-const API_URL = 'http://localhost:3000/api/auth';
+const API_URL = 'https://benodejs-9.onrender.com/api/auth';
 
 // 2. Tạo Provider Component
 export const AuthProvider = ({ children }) => {
