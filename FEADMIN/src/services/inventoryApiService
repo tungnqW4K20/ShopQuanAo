@@ -1,0 +1,36 @@
+// src/services/inventoryApiService.js
+import request from './apiService';
+
+const API_BASE_ENDPOINT = '/inventory';
+
+const getInventoryByProductId = async (productId) => {
+  const response = await request({
+    method: 'get',
+    url: `${API_BASE_ENDPOINT}/product/${productId}`,
+  });
+  if (response && response.success) {
+    return response.data;
+  } else {
+    throw new Error(response?.message || `Không thể lấy dữ liệu tồn kho cho sản phẩm ID ${productId}.`);
+  }
+};
+
+const batchUpdateInventory = async (inventoryData) => {
+  const response = await request({
+    method: 'put',
+    url: `${API_BASE_ENDPOINT}/batch-update`,
+    data: { inventory: inventoryData },
+  });
+  if (response && response.success) {
+    return response.data;
+  } else {
+    throw new Error(response?.message || 'Cập nhật tồn kho thất bại.');
+  }
+};
+
+const inventoryApiService = {
+  getInventoryByProductId,
+  batchUpdateInventory,
+};
+
+export default inventoryApiService;

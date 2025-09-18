@@ -7,14 +7,16 @@ import productApiService from '../services/productApiService';
 import categoryApiService from '../services/categoryApiService';
 import colorProductApiService from '../services/colorProductApiService';
 import sizeProductApiService from '../services/sizeProductApiService';
+import inventoryApiService from '../services/inventoryApiService'; // Import mới
 
 import ColorProductTable from '../components/Products/ColorProductTable';
 import SizeProductTable from '../components/Products/SizeProductTable';
 import ColorProductModal from '../components/Products/ColorProductModal';
 import SizeProductModal from '../components/Products/SizeProductModal';
 import ConfirmDeleteModal from '../components/Shared/ConfirmDeleteModal';
+import InventoryMatrix from '../components/Inventory/InventoryMatrix'; // Import mới
 
-import { FaSpinner, FaArrowLeft, FaImage } from 'react-icons/fa';
+import { FaSpinner, FaArrowLeft, FaImage, FaSave } from 'react-icons/fa'; // Import mới
 import { useAuth } from '../contexts/AuthContext';
 
 function ProductVariantManagementPage() {
@@ -38,8 +40,13 @@ function ProductVariantManagementPage() {
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [itemToConfirm, setItemToConfirm] = useState(null);
-
+  
   const [loading, setLoading] = useState(true);
+  
+  // State mới cho tồn kho
+  const [inventory, setInventory] = useState([]);
+  const [initialInventory, setInitialInventory] = useState([]);
+  const [isSavingInventory, setIsSavingInventory] = useState(false);
 
   const fetchProductDetails = useCallback(async () => {
     if (!productId) {
@@ -73,7 +80,8 @@ function ProductVariantManagementPage() {
         ? await colorProductApiService.getAllColorProductsByProductIdIncludingDeleted(productId)
         : await colorProductApiService.getAllColorProductsByProductId(productId);
       setColorVariants(data || []);
-    } catch (err) {
+    } catch (err)
+ {
       toast.error(`Không thể tải biến thể màu: ${err.message}`);
       if (err.shouldLogout || err.status === 401) handleUnauthorized();
     }
@@ -92,6 +100,18 @@ function ProductVariantManagementPage() {
     }
   }, [productId, showAllSizeVariants, handleUnauthorized]);
 
+  const fetchInventory = useCallback(async () => {
+    if (!productId) return;
+    try {
+      const data = await inventoryApiService.getInventoryByProductId(productId);
+      setInventory(data || []);
+      setInitialInventory(JSON.parse(JSON.stringify(data || []))); 
+    } catch (err) {
+      toast.error(`Không thể tải dữ liệu tồn kho: ${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
+    }
+  }, [productId, handleUnauthorized]);
+
   useEffect(() => {
     fetchProductDetails();
   }, [fetchProductDetails]);
@@ -107,6 +127,13 @@ function ProductVariantManagementPage() {
         fetchSizeVariants();
     }
   }, [fetchSizeVariants, productId]);
+
+  useEffect(() => {
+    if (colorVariants.length > 0 && sizeVariants.length > 0) {
+      fetchInventory();
+    }
+  }, [colorVariants, sizeVariants, fetchInventory]);
+
 
   const handleOpenAddColorModal = () => {
     setCurrentColorVariant(null);
@@ -212,6 +239,70 @@ function ProductVariantManagementPage() {
     }
   };
 
+  const handleQuantityChange = (colorId, sizeId, newQuantity) => {
+    setInventory((prevInventory) => {
+      const newInventory = [...prevInventory];
+      const itemIndex = newInventory.findIndex(
+        (item) => item.color_product_id === colorId && item.size_product_id === sizeId
+      );
+
+      if (itemIndex > -1) {
+        newInventory[itemIndex] = { ...newInventory[itemIndex], quantity: newQuantity };
+      } else {
+        newInventory.push({
+          color_product_id: colorId,
+          size_product_id: sizeId,
+          quantity: newQuantity,
+        });
+      }
+      return newInventory;
+    });
+  };
+
+  const hasInventoryChanged = () => {
+    if (inventory.length !== initialInventory.length) return true;
+    for (const item of inventory) {
+      const initialItem = initialInventory.find(
+        (init) => init.color_product_id === item.color_product_id && init.size_product_id === item.size_product_id
+      );
+      if (!initialItem || initialItem.quantity !== item.quantity) {
+        return true;
+      }
+    }
+    const itemsInInitialOnly = initialInventory.filter(
+      init => !inventory.some(item => item.color_product_id === init.color_product_id && item.size_product_id === init.size_product_id)
+    );
+    if(itemsInInitialOnly.some(item => item.quantity !== 0)) return true;
+    
+    return false;
+  };
+
+  const handleSaveInventory = async () => {
+    setIsSavingInventory(true);
+    try {
+      const dataToUpdate = inventory.filter(item => {
+        const initialItem = initialInventory.find(
+            (init) => init.color_product_id === item.color_product_id && init.size_product_id === item.size_product_id
+        );
+        return !initialItem ? item.quantity > 0 : initialItem.quantity !== item.quantity;
+      });
+
+      if (dataToUpdate.length === 0) {
+        toast.info("Không có thay đổi nào để lưu.");
+        return;
+      }
+      await inventoryApiService.batchUpdateInventory(dataToUpdate);
+      toast.success("Đã lưu thay đổi tồn kho thành công!");
+      fetchInventory(); 
+      fetchColorVariants();
+      fetchSizeVariants();
+    } catch (err) {
+      toast.error(`Lưu tồn kho thất bại: ${err.message}`);
+      if (err.shouldLogout || err.status === 401) handleUnauthorized();
+    } finally {
+      setIsSavingInventory(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen"><FaSpinner className="animate-spin text-4xl text-indigo-600" /></div>;
@@ -221,18 +312,20 @@ function ProductVariantManagementPage() {
     return (
         <div className="container mx-auto px-4 sm:px-8 py-8 text-center">
             <h1 className="text-xl text-red-500">Không tìm thấy thông tin sản phẩm.</h1>
-            <Link to="/manage/products" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
+            <Link to="/admin/products" className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800">
               <FaArrowLeft className="mr-2" /> Quay lại danh sách sản phẩm
             </Link>
         </div>
     );
   }
+  
+  const inventoryChanged = hasInventoryChanged();
 
   return (
     <div className="container mx-auto px-4 sm:px-8 py-8">
       <ToastContainer autoClose={3000} hideProgressBar />
       <div className="mb-6">
-        <Link to="/manage/products" className="inline-flex items-center text-indigo-600 hover:text-indigo-800">
+        <Link to="/admin/products" className="inline-flex items-center text-indigo-600 hover:text-indigo-800">
           <FaArrowLeft className="mr-2" /> Quay lại danh sách sản phẩm
         </Link>
       </div>
@@ -277,6 +370,30 @@ function ProductVariantManagementPage() {
                 )}
             </div>
         </div>
+      </div>
+
+      <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-700">Quản lý Tồn Kho Chi Tiết</h2>
+          <button
+            onClick={handleSaveInventory}
+            disabled={!inventoryChanged || isSavingInventory}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isSavingInventory ? (
+              <FaSpinner className="animate-spin -ml-1 mr-2 h-5 w-5" />
+            ) : (
+              <FaSave className="-ml-1 mr-2 h-5 w-5" />
+            )}
+            Lưu Tồn Kho
+          </button>
+        </div>
+        <InventoryMatrix
+          colors={colorVariants.filter(c => !c.deletedAt)}
+          sizes={sizeVariants.filter(s => !s.deletedAt)}
+          inventory={inventory}
+          onQuantityChange={handleQuantityChange}
+        />
       </div>
 
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
@@ -340,7 +457,7 @@ function ProductVariantManagementPage() {
         actionType={
             itemToConfirm?.action === 'soft-delete' ? 'xóa mềm' :
             itemToConfirm?.action === 'hard-delete' ? 'xóa vĩnh viễn' :
-            itemToConfirm?.action === 'restore' ? 'khôi phục' : 'thực hiện' // fallback
+            itemToConfirm?.action === 'restore' ? 'khôi phục' : 'thực hiện'
         }
         isRestore={itemToConfirm?.action === 'restore'}
       />
