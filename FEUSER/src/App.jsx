@@ -13,6 +13,7 @@ import ShoppingCartPage from './pages/Cart/ShoppingCartPage'
  import CustomerCare from './pages/CustomerCare/CustomerCare'
 import BlogPage from './pages/Blog/BlogPage'
 import ProfilePage from './pages/Profile/ProfilePage'
+import OrderConfirmationPage from './pages/Orderdetail/OrderConfirmationPage'
 
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
          <Route path="/customer-care" element={<CustomerCare />} />
          <Route path="/blog" element={<BlogPage />} />
          <Route path="/profile" element={<ProfilePage />} />
+         <Route path="/order/:orderId" element={<OrderConfirmationPage />} />
       </Routes>
       <Footer/>
     </>

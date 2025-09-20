@@ -4,7 +4,7 @@ import QuantitySelector from './QuantitySelector';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 const formatPrice = (value) => {
   if (value === null || value === undefined) return '0đ';
   return Number(value).toLocaleString('vi-VN') + 'đ';
@@ -21,14 +21,14 @@ const sampleVouchers = [
     { id: 'vc2', code: 'COOL25', discount: 25000, condition: 'Đơn 150k', expiry: '06/05/2025', desc: '[Deal 5.5 Giảm 25k đơn từ 150k]' },
 ]
 
-const VIETNAM_ADDRESS_API_URL = 'https://raw.githubusercontent.com/madnh/hanhchinhvn/master/dist/tree.json';
-
 function ShoppingCartPage() {
   const { user, token, isAuthenticated } = useAuth();
+  // 2. Khởi tạo navigate
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     namePrefix: 'Anh/Chị', name: '', phone: '', email: '', address: '',
-    city: '', district: '', ward: '', notes: '', isGift: false,
+    notes: '', isGift: false,
   });
   const [selectedPayment, setSelectedPayment] = useState('cod');
   const [voucherCode, setVoucherCode] = useState('');
@@ -36,21 +36,31 @@ function ShoppingCartPage() {
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [shippingFee, setShippingFee] = useState(0);
 
-  const [addressData, setAddressData] = useState(null);
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
-  const [addressError, setAddressError] = useState(null);
-
+  // LẤY THÊM HÀM `fetchCart` TỪ CONTEXT
   const { 
     cartItems, 
     isLoading: isLoadingCart, 
     updateCartItem, 
     removeFromCart, 
-    subtotal,
-    clearCart, // Lấy thêm hàm clearCart
+    fetchCart, // <- THAY THẾ clearCart BẰNG fetchCart ĐỂ ĐỒNG BỘ VỚI SERVER
   } = useCart();
+  
+  const [selectedItems, setSelectedItems] = useState(new Set());
+
+  useEffect(() => {
+    if (cartItems.length > 0) {
+        setSelectedItems(new Set(cartItems.map(item => item.id)));
+    }
+  }, [cartItems]);
+
+
+  const selectedCartItems = useMemo(() => {
+    return cartItems.filter(item => selectedItems.has(item.id));
+  }, [cartItems, selectedItems]);
+
+  const subtotal = useMemo(() => {
+    return selectedCartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  }, [selectedCartItems]);
 
 
   useEffect(() => {
@@ -65,80 +75,29 @@ function ShoppingCartPage() {
     }
   }, [user]);
 
-  useEffect(() => {
-    const fetchAddressData = async () => {
-      setIsLoadingAddress(true);
-      setAddressError(null);
-      try {
-        const response = await fetch(VIETNAM_ADDRESS_API_URL);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setAddressData(data);
-        const provinceOptions = Object.values(data)
-            .map(province => ({
-                code: province.code,
-                name: province.name_with_type
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-        setProvinces(provinceOptions);
-      } catch (error) {
-        console.error("Failed to fetch Vietnam address data:", error);
-        setAddressError("Không thể tải dữ liệu địa chỉ. Vui lòng làm mới trang hoặc thử lại sau.");
-      } finally {
-        setIsLoadingAddress(false);
-      }
-    };
-    fetchAddressData();
-  }, []);
-
-  useEffect(() => {
-    setDistricts([]);
-    setWards([]);
-    if (formData.city && addressData) {
-        const selectedProvinceData = addressData[formData.city];
-        if (selectedProvinceData && selectedProvinceData['quan-huyen']) {
-            const districtOptions = Object.values(selectedProvinceData['quan-huyen'])
-                .map(district => ({
-                    code: district.code,
-                    name: district.name_with_type
-                }))
-                .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-             setDistricts(districtOptions);
-        }
-    }
-  }, [formData.city, addressData]);
-
-   useEffect(() => {
-    setWards([]);
-    if (formData.district && formData.city && addressData) {
-        const selectedProvinceData = addressData[formData.city];
-        const selectedDistrictData = selectedProvinceData?.['quan-huyen']?.[formData.district];
-        if (selectedDistrictData && selectedDistrictData['xa-phuong']) {
-            const wardOptions = Object.values(selectedDistrictData['xa-phuong'])
-                 .map(ward => ({
-                    code: ward.code,
-                    name: ward.name_with_type
-                 }))
-                 .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-            setWards(wardOptions);
-        }
-    }
-   }, [formData.district, formData.city, addressData]);
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => {
-        const newState = { ...prev, [name]: type === 'checkbox' ? checked : value };
-        if (name === 'city') {
-          newState.district = '';
-          newState.ward = '';
-        } else if (name === 'district') {
-          newState.ward = '';
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleSelectItem = (itemId) => {
+    setSelectedItems(prevSelected => {
+        const newSelected = new Set(prevSelected);
+        if (newSelected.has(itemId)) {
+            newSelected.delete(itemId);
+        } else {
+            newSelected.add(itemId);
         }
-        return newState;
+        return newSelected;
     });
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+        setSelectedItems(new Set(cartItems.map(item => item.id)));
+    } else {
+        setSelectedItems(new Set());
+    }
   };
 
   const total = useMemo(() => {
@@ -162,69 +121,88 @@ function ShoppingCartPage() {
     alert("Chức năng Mã giới thiệu đang được phát triển.");
   };
 
+  
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (selectedCartItems.length === 0) {
+        alert("Bạn chưa chọn sản phẩm nào để đặt hàng.");
+        return;
+    }
+
     const errors = [];
     if (!formData.name.trim()) errors.push("Họ và tên");
     if (!formData.phone.trim()) errors.push("Số điện thoại");
-    if (!formData.address.trim()) errors.push("Địa chỉ (Số nhà, tên đường)");
-    if (!formData.city) errors.push("Tỉnh/Thành phố");
-    if (!formData.district) errors.push("Quận/Huyện");
-    if (!formData.ward) errors.push("Phường/Xã");
+    if (!formData.address.trim()) errors.push("Địa chỉ đầy đủ");
 
     if (errors.length > 0) {
         alert(`Vui lòng điền đầy đủ thông tin bắt buộc:\n- ${errors.join("\n- ")}`);
         return;
     }
-
-    if (cartItems.length === 0) {
-        alert("Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm trước khi đặt hàng.");
-        return;
-    }
-
-    const selectedCityName = provinces.find(p => p.code === formData.city)?.name || '';
-    const selectedDistrictName = districts.find(d => d.code === formData.district)?.name || '';
-    const selectedWardName = wards.find(w => w.code === formData.ward)?.name || '';
-
+    
     const orderPayload = {
       customer_id: user.id,
-      address: `${formData.address}, ${selectedWardName}, ${selectedDistrictName}, ${selectedCityName}`,
+      address: formData.address,
       phone_number: formData.phone,
       total_price: total,
       status: 'pending',
       payment_method: selectedPayment,
       notes: formData.notes,
-      items: cartItems.map(item => ({
-        cart_item_id: item.id,
+      items: selectedCartItems.map(item => ({
+        productId: item.productId,
+        colorProductId: item.colorProductId,
+        sizeProductId: item.sizeProductId,
         quantity: item.quantity,
-        price: item.price
       }))
     };
 
     try {
-        const response = await axios.post('https://benodejs-9.onrender.com/api/orders', orderPayload, {
+        const orderResponse = await axios.post('https://benodejs-9.onrender.com/api/orders', orderPayload, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if(response.data.success) {
+        if (orderResponse.data.success) {
             alert("Đặt hàng thành công!");
-            clearCart();
+            navigate(`/order/${orderResponse.data.data.id}`);
+
+            // Bắt đầu quá trình xóa các sản phẩm đã mua khỏi giỏ hàng
+            try {
+                // Tạo một mảng các promises để xóa các sản phẩm song song
+                const deletePromises = selectedCartItems.map(item =>
+                    axios.delete(`https://benodejs-9.onrender.com/api/carts/${item.id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                );
+
+                // Chờ cho tất cả các yêu cầu xóa hoàn tất
+                await Promise.all(deletePromises);
+
+            } catch (deleteError) {
+                console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng sau khi đặt hàng:", deleteError);
+                // Dù có lỗi xóa, vẫn nên cập nhật lại giỏ hàng để người dùng thấy trạng thái mới nhất
+            } finally {
+                // Luôn gọi fetchCart() để làm mới giỏ hàng từ server
+                // Điều này sẽ hiển thị đúng các sản phẩm còn lại (nếu có)
+                fetchCart();
+            }
         } else {
-            alert(`Đặt hàng thất bại: ${response.data.message}`);
+            const errorMessage = Array.isArray(orderResponse.data.message) 
+                ? orderResponse.data.message.join('\n') 
+                : orderResponse.data.message;
+            alert(`Đặt hàng thất bại: ${errorMessage}`);
         }
     } catch (error) {
         console.error("Error placing order:", error);
-        alert(`Lỗi khi đặt hàng: ${error.response?.data?.message || 'Không thể kết nối đến máy chủ'}`);
+        const serverError = error.response?.data?.message;
+        const errorMessage = Array.isArray(serverError) 
+            ? serverError.join('\n') 
+            : (serverError || 'Không thể kết nối đến máy chủ');
+        alert(`Lỗi khi đặt hàng: ${errorMessage}`);
     }
   };
+  // ====================================================================
+  // === KẾT THÚC PHẦN CẬP NHẬT                                        ===
+  // ====================================================================
 
-  // if (isLoadingCart) {
-  //   return (
-  //     <div className="min-h-screen flex justify-center items-center py-4">
-  //       <div className="animate-spin-slow rounded-full h-6 w-6 border-2 border-t-transparent border-blue-500"></div>
-  //     </div>
-  //   );
-  // }
 
   if (!isAuthenticated) {
       return (
@@ -268,8 +246,6 @@ function ShoppingCartPage() {
           <div className="lg:col-span-7 mb-10 lg:mb-0">
             <section aria-labelledby="customer-info-heading" className="bg-white p-6 rounded-lg shadow-sm mb-8">
               <h2 id="customer-info-heading" className="text-xl font-semibold text-gray-900 mb-5">Thông tin đặt hàng</h2>
-               {isLoadingAddress && <p className="text-sm text-blue-600 mb-4 animate-pulse">Đang tải dữ liệu địa chỉ...</p>}
-               {addressError && !isLoadingAddress && <p className="text-sm text-red-600 mb-4">{addressError}</p>}
               <form onSubmit={handlePlaceOrder}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
                   <div className="sm:col-span-2 flex items-end gap-2">
@@ -304,68 +280,10 @@ function ShoppingCartPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ (Số nhà, tên đường) <span className="text-red-500">*</span></label>
-                    <input type="text" name="address" id="address" placeholder="Ví dụ: 103 Vạn Phúc" required value={formData.address} onChange={handleInputChange} className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5" />
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ đầy đủ <span className="text-red-500">*</span></label>
+                    <input type="text" name="address" id="address" placeholder="Ví dụ: 103 Vạn Phúc, Phường Vạn Phúc, Quận Ba Đình, Hà Nội" required value={formData.address} onChange={handleInputChange} className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5" />
                   </div>
-
-                  <div>
-                     <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố <span className="text-red-500">*</span></label>
-                      <select
-                          id="city"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleInputChange}
-                          required
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed"
-                          disabled={isLoadingAddress || provinces.length === 0 || !!addressError}
-                      >
-                          <option value="">{isLoadingAddress ? 'Đang tải...' : (addressError ? 'Lỗi tải dữ liệu' : 'Chọn Tỉnh/Thành phố')}</option>
-                          {!isLoadingAddress && !addressError && provinces.map((province) => (
-                              <option key={province.code} value={province.code}>
-                                  {province.name}
-                              </option>
-                          ))}
-                      </select>
-                  </div>
-                   <div>
-                     <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện <span className="text-red-500">*</span></label>
-                      <select
-                          id="district"
-                          name="district"
-                          value={formData.district}
-                          onChange={handleInputChange}
-                          required
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed"
-                          disabled={!formData.city || isLoadingAddress || !!addressError}
-                      >
-                          <option value="">{ !formData.city ? 'Chọn Tỉnh/Thành phố trước' : (districts.length === 0 ? 'Không có Quận/Huyện' : 'Chọn Quận/Huyện')}</option>
-                          {districts.map((district) => (
-                               <option key={district.code} value={district.code}>
-                                  {district.name}
-                              </option>
-                          ))}
-                      </select>
-                  </div>
-                   <div>
-                     <label htmlFor="ward" className="block text-sm font-medium text-gray-700 mb-1">Phường/Xã <span className="text-red-500">*</span></label>
-                      <select
-                          id="ward"
-                          name="ward"
-                          value={formData.ward}
-                          onChange={handleInputChange}
-                          required
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5 bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed"
-                          disabled={!formData.district || isLoadingAddress || !!addressError}
-                      >
-                          <option value="">{ !formData.district ? 'Chọn Quận/Huyện trước' : (wards.length === 0 ? 'Không có Phường/Xã' : 'Chọn Phường/Xã') }</option>
-                           {wards.map((ward) => (
-                               <option key={ward.code} value={ward.code}>
-                                  {ward.name}
-                              </option>
-                          ))}
-                      </select>
-                  </div>
-
+                  
                   <div className="sm:col-span-2">
                     <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
                     <textarea name="notes" id="notes" rows="3" placeholder="Ghi chú thêm (Ví dụ: Giao hàng giờ hành chính)" value={formData.notes} onChange={handleInputChange} className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2.5"></textarea>
@@ -427,8 +345,23 @@ function ShoppingCartPage() {
           
           <div className="lg:col-span-5">
              <section aria-labelledby="cart-heading" className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                 <h2 id="cart-heading" className="text-xl font-semibold text-gray-900 mb-5">Giỏ hàng ({cartItems.reduce((count, item) => count + item.quantity, 0)} sản phẩm)</h2>
-                 {subtotal < 269000 && (
+                 <div className="flex justify-between items-center border-b pb-4 mb-4">
+                    <h2 id="cart-heading" className="text-xl font-semibold text-gray-900">Giỏ hàng ({cartItems.length} sản phẩm)</h2>
+                 </div>
+                 <div className="flex items-center mb-4">
+                    <input
+                        type="checkbox"
+                        id="select-all"
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        onChange={handleSelectAll}
+                        checked={cartItems.length > 0 && selectedItems.size === cartItems.length}
+                    />
+                    <label htmlFor="select-all" className="ml-3 text-sm text-gray-700">
+                        Chọn tất cả ({selectedItems.size}/{cartItems.length} sản phẩm)
+                    </label>
+                 </div>
+
+                 {subtotal < 269000 && selectedItems.size > 0 && (
                     <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-md mb-5 flex items-center justify-between gap-2">
                         <span>🎁 Mua thêm <span className='font-bold'>{formatPrice(269000 - subtotal)}</span> để nhận quà <span className='font-bold'>trị giá 249k</span></span>
                         <a href="/" className="flex-shrink-0 bg-blue-600 text-white text-xs font-medium px-3 py-1 rounded hover:bg-blue-700 transition-colors">Mua ngay</a>
@@ -436,7 +369,14 @@ function ShoppingCartPage() {
                  )}
                  <ul role="list" className="divide-y divide-gray-200">
                      {cartItems.map((item) => (
-                         <li key={item.id} className="flex py-4 sm:py-5 gap-4">
+                         <li key={item.id} className="flex items-center py-4 sm:py-5 gap-4">
+                             <input
+                                type="checkbox"
+                                id={`item-${item.id}`}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                checked={selectedItems.has(item.id)}
+                                onChange={() => handleSelectItem(item.id)}
+                              />
                              <div className="flex-shrink-0">
                                  <a href={`#product/${item.productId}`}>
                                     <img src={item.image} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover border border-gray-200 hover:opacity-90 transition-opacity" />
@@ -453,7 +393,7 @@ function ShoppingCartPage() {
                                      <p className="mt-1 text-xs text-gray-500">
                                          {item.color} / {item.size}
                                          {item.originalPrice > item.price && (
-                                            <span className="ml-2 line-through text-gray-400">{formatPrice(item.originalPrice)}</span>
+                                            <span className="ml-2 line-through text-gray-400">{formatPrice(item.originalPrice * item.quantity)}</span>
                                          )}
                                      </p>
                                  </div>
@@ -544,7 +484,7 @@ function ShoppingCartPage() {
                 <h2 id="summary-heading" className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Tổng cộng</h2>
                 <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                        <span className="text-gray-600">Tạm tính</span>
+                        <span className="text-gray-600">Tạm tính ({selectedItems.size} sản phẩm)</span>
                         <span className="font-medium text-gray-900">{formatPrice(subtotal)}</span>
                     </div>
                      {appliedDiscount > 0 && (
@@ -569,14 +509,16 @@ function ShoppingCartPage() {
                 </p>
 
                 <div className="mt-6">
+                  <Link to = "/order">
                     <button
                         type="button"
                         onClick={handlePlaceOrder}
                         className="w-full bg-gray-900 text-white py-3 px-4 rounded-md shadow-sm text-base font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 disabled:opacity-60 disabled:cursor-wait transition-all"
-                        disabled={isLoadingAddress || !formData.name || !formData.phone || !formData.address || !formData.city || !formData.district || !formData.ward }
+                        disabled={!formData.name || !formData.phone || !formData.address || selectedItems.size === 0}
                     >
-                       {isLoadingAddress ? 'Đang tải địa chỉ...' : 'Tiến hành đặt hàng'}
+                       {`Tiến hành đặt hàng (${selectedItems.size} sản phẩm)`}
                     </button>
+                    </Link>
                 </div>
              </section>
           </div>

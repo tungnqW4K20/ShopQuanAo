@@ -13,17 +13,27 @@ export const CartProvider = ({ children }) => {
 
   const formatCartData = (apiData) => {
     if (!apiData || !Array.isArray(apiData)) return [];
-    return apiData.map(item => ({
-      id: item.id,
-      productId: item.product.id,
-      name: item.product.name,
-      image: item.colorVariant.image_urls?.[0] || item.product.image_url,
-      color: item.colorVariant.name,
-      size: item.sizeVariant.name,
-      quantity: item.quantity,
-      price: parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price),
-      originalPrice: (parseFloat(item.colorVariant.price) + parseFloat(item.sizeVariant.price)) * 1.25
-    }));
+    return apiData.map(item => {
+      const basePrice = parseFloat(item.product.price) || 0;
+      const colorPrice = parseFloat(item.colorVariant.price) || 0;
+      const sizePrice = parseFloat(item.sizeVariant.price) || 0;
+      const finalPrice = basePrice + colorPrice + sizePrice;
+      const originalFinalPrice = finalPrice * 1.25;
+
+      return {
+        id: item.id,
+        productId: item.product.id,
+        colorProductId: item.color_product_id, 
+        sizeProductId: item.size_product_id,  
+        name: item.product.name,
+        image: item.colorVariant.image_urls?.[0] || item.product.image_url,
+        color: item.colorVariant.name,
+        size: item.sizeVariant.name,
+        quantity: item.quantity,
+        price: finalPrice,
+        originalPrice: originalFinalPrice
+      };
+    });
   };
 
   const fetchCart = useCallback(async () => {
