@@ -14,6 +14,7 @@ import ShoppingCartPage from './pages/Cart/ShoppingCartPage'
 import BlogPage from './pages/Blog/BlogPage'
 import ProfilePage from './pages/Profile/ProfilePage'
 import OrderConfirmationPage from './pages/Orderdetail/OrderConfirmationPage'
+import OrderConfirmationNotAuthenPage from './pages/Orderdetail/OrderConfirmationNotAuthenPage.jsx'
 
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
          <Route path="/blog" element={<BlogPage />} />
          <Route path="/profile" element={<ProfilePage />} />
          <Route path="/order/:orderId" element={<OrderConfirmationPage />} />
+         <Route path="/order-success" element={<OrderConfirmationNotAuthenPage />} />
       </Routes>
       <Footer/>
     </>

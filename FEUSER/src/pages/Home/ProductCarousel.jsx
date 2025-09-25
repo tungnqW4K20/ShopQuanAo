@@ -5,9 +5,8 @@ import ProductCard from './ProductCard';
 
 const CAROUSEL_TITLE = "SẢN PHẨM MẶC HẰNG NGÀY";
 const SEE_MORE_LINK = "/care-share";
-const API_ENDPOINT = 'https://benodejs-9.onrender.com/api/products/get-paginate-featured';
-// --- THAY ĐỔI 1: Cập nhật PAGE_SIZE ---
-const PAGE_SIZE = 6; // Số sản phẩm trên mỗi trang
+const API_ENDPOINT = 'https://benodejs-9.onrender.com/api/products/';
+const PAGE_SIZE = 6; 
 
 const mapApiProductToCardProduct = (apiProduct) => ({
   id: String(apiProduct.id),
@@ -15,7 +14,11 @@ const mapApiProductToCardProduct = (apiProduct) => ({
   imageUrl: apiProduct.image_url,
   link: `/product/${apiProduct.id}`,
   price: parseFloat(apiProduct.price),
-  rating: null, isNew: false, colors: [], originalPrice: null, discountPercent: null,
+  rating: null,
+  isNew: false,
+  colors: [],
+  originalPrice: null,
+  discountPercent: null,
 });
 
 const ProductCarousel = () => {
@@ -24,7 +27,6 @@ const ProductCarousel = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
-  
   const [visiblePageIndex, setVisiblePageIndex] = useState(0);
 
   const containerRef = useRef(null);
@@ -45,9 +47,10 @@ const ProductCarousel = () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      console.log("sssssss")
       const response = await fetch(`${API_ENDPOINT}?limit=${PAGE_SIZE}&page=${pageToFetch}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const result = await response.json();
 
       if (result.success && result.data && result.data.length > 0) {
@@ -58,6 +61,7 @@ const ProductCarousel = () => {
             .filter(p => !existingIds.has(p.id));
           return [...prevProducts, ...newUniqueProducts];
         });
+        
         const { currentPage, totalPages } = result.pagination;
         setApiCurrentPage(currentPage);
         setHasMoreProducts(currentPage < totalPages);
@@ -93,13 +97,13 @@ const ProductCarousel = () => {
     }
   }, [visiblePageIndex, products.length, hasMoreProducts, isLoading, apiCurrentPage, fetchProducts]);
 
-  // --- RENDER LOGIC ---
   const trackOffset = visiblePageIndex * containerWidth;
   const totalDisplayablePages = Math.ceil(products.length / PAGE_SIZE);
   const isAtStart = visiblePageIndex === 0;
   const isLastVisiblePage = visiblePageIndex >= totalDisplayablePages - 1;
   const isTrulyAtEnd = isLastVisiblePage && !hasMoreProducts;
 
+  // Giao diện khi đang tải lần đầu
   if (containerWidth === 0 || (!initialLoadDone && isLoading)) {
     return (
       <div className="container mx-auto px-8 py-8 sm:py-12" ref={containerRef}>
@@ -111,6 +115,7 @@ const ProductCarousel = () => {
     );
   }
 
+  // Giao diện khi không có sản phẩm nào
   if (initialLoadDone && products.length === 0) {
     return (
       <div className="container mx-auto px-8 py-8 sm:py-12">
@@ -141,9 +146,7 @@ const ProductCarousel = () => {
           {products.map((product) => (
             <div
               key={product.id}
-              // --- THAY ĐỔI 2: Tăng padding để tăng khoảng cách ---
-              // px-2.5 -> 1.25rem, px-3 -> 1.5rem, ...
-              className="flex-shrink-0 px-3 md:px-4" 
+              className="flex-shrink-0 px-3 md:px-4"
               style={{ width: `${100 / PAGE_SIZE}%` }}
             >
               <ProductCard product={product} />

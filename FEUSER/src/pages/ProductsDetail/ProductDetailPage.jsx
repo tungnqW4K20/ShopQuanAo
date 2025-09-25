@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext'; // Import hook xác thực
+import { useAuth } from '../../context/AuthContext';
 
 // Import các component con
 import Breadcrumbs from './Breadcrumbs';
@@ -21,7 +21,6 @@ const transformApiDataToComponentProps = (apiData) => {
         image: color.image_urls?.[0] || apiData.image_url,
     }));
 
-    // *** QUAN TRỌNG: Giữ lại toàn bộ object size để lấy được ID ***
     const availableSizes = apiData.sizeOptions;
 
     const breadcrumbs = [
@@ -57,7 +56,7 @@ const transformApiDataToComponentProps = (apiData) => {
         price: parseFloat(apiData.price),
         originalPrice: parseFloat(apiData.price) * 1.25,
         rating: 4.8,
-        reviewCount: 150, // Sẽ được cập nhật từ API bình luận
+        reviewCount: 150, 
         freeship: true,
         vouchers: ['Giảm 555k', 'Giảm 255k'],
         offerBannerImage: 'https://media3.coolmate.me/cdn-cgi/image/width=713,height=1050,quality=85,format=auto/uploads/May2025/footer_voucher_555.jpg',
@@ -74,7 +73,6 @@ const transformApiDataToComponentProps = (apiData) => {
         colors,
         availableSizes,
         description,
-        // Dữ liệu reviews sẽ được fetch riêng
     };
 };
 
@@ -86,21 +84,20 @@ const RecentlyViewed = ({ products }) => products && products.length > 0 ? <div 
 function ProductDetailPage() {
     const { id: productId } = useParams();
     const navigate = useNavigate();
-    const { isAuthenticated, token, user } = useAuth(); // Lấy thêm token và user
+    const { isAuthenticated, token, user } = useAuth(); 
 
     const [product, setProduct] = useState(null);
-    const [comments, setComments] = useState([]); // State cho bình luận
+    const [comments, setComments] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const [selectedColor, setSelectedColor] = useState(null);
-    const [selectedSize, setSelectedSize] = useState(null); // Sẽ lưu cả object size     
+    const [selectedSize, setSelectedSize] = useState(null);     
     const [quantity, setQuantity] = useState(1);
     const [galleryImages, setGalleryImages] = useState([]);
 
     const { addToCart, isLoading: isCartLoading } = useCart();
 
-    // Fetch thông tin sản phẩm
     useEffect(() => {
         const fetchProduct = async () => {
             setIsLoading(true);
@@ -110,7 +107,6 @@ function ProductDetailPage() {
                 if (response.data.success) {
                     const transformedData = transformApiDataToComponentProps(response.data.data);
                     setProduct(transformedData);
-
                     if (transformedData?.colors?.length > 0) {
                         const initialColor = transformedData.colors[0];
                         setSelectedColor(initialColor);
@@ -133,29 +129,25 @@ function ProductDetailPage() {
                 setIsLoading(false);
             }
         };
-
         if (productId) {
             fetchProduct();
         }
     }, [productId]);
 
-    // Fetch bình luận của sản phẩm
     useEffect(() => {
         const fetchComments = async () => {
-            try {
-                const response = await axios.get(`https://benodejs-9.onrender.com/api/comments/product/${productId}`);
-                if (response.data.success) {
-                    setComments(response.data.data);
+            if (productId) {
+                try {
+                    const response = await axios.get(`https://benodejs-9.onrender.com/api/comments/product/${productId}`);
+                    if (response.data.success) {
+                        setComments(response.data.data);
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi tải bình luận:", err);
                 }
-            } catch (err) {
-                console.error("Lỗi khi tải bình luận:", err);
-                // Có thể set một state lỗi riêng cho bình luận nếu cần
             }
         };
-
-        if (productId) {
-            fetchComments();
-        }
+        fetchComments();
     }, [productId]);
 
     const handleColorSelect = (color) => {
@@ -169,7 +161,7 @@ function ProductDetailPage() {
         setGalleryImages(newGalleryImages);
     };
 
-    const handleSizeSelect = (size) => { // size là object { id, name, ... }
+    const handleSizeSelect = (size) => {
         setSelectedSize(size);
     };
 
@@ -180,17 +172,12 @@ function ProductDetailPage() {
     }
 
     const handleAddToCart = async () => {
-        if (!isAuthenticated) {
-            alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
-            navigate('/login');
-            return;
-        }
-
         if (!selectedColor || !selectedSize) {
             alert("Vui lòng chọn Màu sắc và Kích thước!");
             return;
         }
 
+        // Dữ liệu payload luôn cần để gửi lên API (cho người dùng đã đăng nhập)
         const cartItemPayload = {
             product_id: product.id,
             color_product_id: selectedColor.id,
@@ -198,53 +185,50 @@ function ProductDetailPage() {
             quantity: quantity,
         };
 
+        // Dữ liệu chi tiết này chỉ cần cho giỏ hàng local của khách
+        // vì localStorage không thể tự lấy tên, hình ảnh, giá...
+        const productDetailsForGuest = {
+            name: product.name,
+            image: selectedColor.image_urls?.[0] || product.images?.[0]?.src,
+            color: selectedColor.name,
+            size: selectedSize.name,
+            price: product.price,
+            originalPrice: product.originalPrice
+        };
+
         try {
-            await addToCart(cartItemPayload);
-            alert(`Thêm thành công!`);
+            // Truyền cả 2 object vào hàm addToCart trong context.
+            // Context sẽ tự quyết định dùng dữ liệu nào dựa vào trạng thái đăng nhập.
+            await addToCart(cartItemPayload, productDetailsForGuest);
+            alert(`Đã thêm sản phẩm vào giỏ hàng!`);
         } catch (error) {
             console.error("Lỗi khi thêm vào giỏ hàng:", error);
             alert(`Đã xảy ra lỗi: ${error.message || 'Không thể kết nối đến máy chủ.'}`);
         }
     }
     
-    // Hàm xử lý gửi bình luận mới
     const handlePostComment = async (commentContent) => {
         if (!isAuthenticated) {
             alert("Vui lòng đăng nhập để gửi bình luận!");
             navigate('/login');
             return;
         }
-
         if (!commentContent.trim()) {
             alert("Vui lòng nhập nội dung bình luận.");
             return;
         }
-
         try {
             const response = await axios.post(
                 'https://benodejs-9.onrender.com/api/comments',
-                {
-                    content: commentContent,
-                    product_id: parseInt(productId, 10),
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}` // Gửi token xác thực
-                    }
-                }
+                { content: commentContent, product_id: parseInt(productId, 10) },
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-
             if (response.data.success) {
-                // Tạo bình luận mới để hiển thị ngay lập tức
                 const newComment = {
                     ...response.data.data,
-                    customer: { // API trả về không có customer, ta tự thêm vào
-                        id: user.id,
-                        name: user.name,
-                    },
-                    Replies: [] // Bình luận mới chưa có trả lời
+                    customer: { id: user.id, name: user.name },
+                    Replies: []
                 };
-                // Cập nhật state comments để UI tự render lại
                 setComments(prevComments => [newComment, ...prevComments]);
                 alert('Gửi bình luận thành công!');
             }
@@ -254,7 +238,6 @@ function ProductDetailPage() {
         }
     };
 
-
     if (isLoading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -262,23 +245,20 @@ function ProductDetailPage() {
             </div>
         );
     }
-
     if (error) {
         return <div className="text-center py-10 text-red-600 font-semibold">{error}</div>;
     }
-
     if (!product) {
         return <div className="text-center py-10 text-gray-600">Không tìm thấy sản phẩm.</div>;
     }
 
-    // Chuyển đổi dữ liệu bình luận từ API sang định dạng ProductReviews cần
     const transformedReviewsList = comments.map(comment => ({
         id: comment.id,
         authorName: comment.customer.name,
         date: new Date(comment.createdAt).toLocaleDateString('vi-VN'),
-        rating: 5, // API comment không có rating, tạm để 5 sao
+        rating: 5, 
         comment: comment.content,
-        images: [], // API comment không có hình ảnh
+        images: [], 
     }));
 
     return (
@@ -306,10 +286,10 @@ function ProductDetailPage() {
 
                 <div className="mt-12 lg:mt-16">
                     <ProductReviews
-                        averageRating={4.8} // Có thể tính toán từ comments nếu có rating
+                        averageRating={4.8} 
                         totalReviews={comments.length}
                         reviewsList={transformedReviewsList}
-                        onPostComment={handlePostComment} // Truyền hàm xử lý xuống
+                        onPostComment={handlePostComment} 
                         isAuthenticated={isAuthenticated}
                     />
                 </div>

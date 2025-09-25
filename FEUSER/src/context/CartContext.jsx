@@ -7,10 +7,24 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const { isAuthenticated, token } = useAuth();
   
-  const [cartItems, setCartItems] = useState([]);
+  // Khởi tạo state: Ưu tiên lấy từ localStorage nếu là khách
+  const [cartItems, setCartItems] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const localCart = window.localStorage.getItem('guestCart');
+        return localCart ? JSON.parse(localCart) : [];
+      } catch (error) {
+        console.error("Lỗi khi đọc giỏ hàng từ localStorage", error);
+        return [];
+      }
+    }
+    return [];
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Hàm này giữ nguyên, dùng để format dữ liệu từ API
   const formatCartData = (apiData) => {
     if (!apiData || !Array.isArray(apiData)) return [];
     return apiData.map(item => {
@@ -37,35 +51,109 @@ export const CartProvider = ({ children }) => {
   };
 
   const fetchCart = useCallback(async () => {
-    if (!isAuthenticated || !token) {
-      setCartItems([]);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get('https://benodejs-9.onrender.com/api/carts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.data.success) {
-        const formattedItems = formatCartData(response.data.data);
-        setCartItems(formattedItems);
+    // Nếu đã đăng nhập, gọi API
+    if (isAuthenticated && token) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get('https://benodejs-9.onrender.com/api/carts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.data.success) {
+          const formattedItems = formatCartData(response.data.data);
+          setCartItems(formattedItems);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải giỏ hàng:", err);
+        setError(err.response?.data?.message || 'Không thể tải giỏ hàng.');
+        setCartItems([]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("Lỗi khi tải giỏ hàng:", err);
-      setError(err.response?.data?.message || 'Không thể tải giỏ hàng.');
-      setCartItems([]);
-    } finally {
-      setIsLoading(false);
+    } else {
+      // Nếu là khách, tải từ localStorage (đã được thực hiện khi khởi tạo state)
+      const localCart = window.localStorage.getItem('guestCart');
+      setCartItems(localCart ? JSON.parse(localCart) : []);
     }
   }, [isAuthenticated, token]);
 
+  // useEffect quan trọng: Đồng bộ giỏ hàng local lên server KHI người dùng đăng nhập
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+    const mergeLocalCartToServer = async () => {
+        if (isAuthenticated && token) {
+            const localCartString = window.localStorage.getItem('guestCart');
+            const localCart = localCartString ? JSON.parse(localCartString) : [];
 
-  const addToCart = async (cartItemPayload) => {
-    if (!isAuthenticated) throw new Error("Vui lòng đăng nhập để thực hiện chức năng này.");
+            if (localCart.length > 0) {
+                setIsLoading(true);
+                try {
+                    const mergePromises = localCart.map(item => 
+                        axios.post('https://benodejs-9.onrender.com/api/carts', {
+                            product_id: item.productId,
+                            color_product_id: item.colorProductId,
+                            size_product_id: item.sizeProductId,
+                            quantity: item.quantity
+                        }, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                    );
+                    await Promise.all(mergePromises);
+                    window.localStorage.removeItem('guestCart');
+                } catch (err) {
+                    console.error("Lỗi khi đồng bộ giỏ hàng:", err);
+                    setError('Đồng bộ giỏ hàng thất bại. Vui lòng tải lại trang.');
+                } finally {
+                    await fetchCart(); // Luôn tải lại giỏ hàng từ server để có dữ liệu mới nhất
+                    setIsLoading(false);
+                }
+            } else {
+                fetchCart(); // Nếu không có giỏ local, chỉ cần tải giỏ hàng từ server
+            }
+        }
+    };
+    mergeLocalCartToServer();
+  }, [isAuthenticated, token, fetchCart]); 
+
+  // useEffect: Lưu giỏ hàng vào localStorage mỗi khi cartItems thay đổi (chỉ khi là khách)
+  useEffect(() => {
+    if (!isAuthenticated) {
+        window.localStorage.setItem('guestCart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isAuthenticated]);
+
+  const addToCart = async (cartItemPayload, productDetailsForGuest) => {
+    // --- Luồng cho khách ---
+    if (!isAuthenticated) {
+        setIsLoading(true);
+        setCartItems(prevItems => {
+            const existingItem = prevItems.find(item =>
+                item.productId === cartItemPayload.product_id &&
+                item.colorProductId === cartItemPayload.color_product_id &&
+                item.sizeProductId === cartItemPayload.size_product_id
+            );
+            if (existingItem) {
+                return prevItems.map(item =>
+                    item.id === existingItem.id
+                        ? { ...item, quantity: item.quantity + cartItemPayload.quantity }
+                        : item
+                );
+            } else {
+                const newItem = {
+                    id: `${cartItemPayload.product_id}-${cartItemPayload.color_product_id}-${cartItemPayload.size_product_id}`,
+                    productId: cartItemPayload.product_id,
+                    colorProductId: cartItemPayload.color_product_id,
+                    sizeProductId: cartItemPayload.size_product_id,
+                    quantity: cartItemPayload.quantity,
+                    ...productDetailsForGuest 
+                };
+                return [...prevItems, newItem];
+            }
+        });
+        setIsLoading(false);
+        return;
+    }
+
+    // --- Luồng cho người dùng đã đăng nhập (như cũ) ---
     setIsLoading(true);
     try {
       await axios.post('https://benodejs-9.onrender.com/api/carts', cartItemPayload, {
@@ -82,6 +170,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateCartItem = async (itemId, newQuantity) => {
+    if (!isAuthenticated) {
+        setCartItems(prevItems =>
+            prevItems.map(item =>
+                item.id === itemId ? { ...item, quantity: Math.max(1, newQuantity) } : item
+            ).filter(item => item.quantity > 0)
+        );
+        return;
+    }
     setIsLoading(true);
     try {
       await axios.put(`https://benodejs-9.onrender.com/api/carts/${itemId}`, { quantity: newQuantity }, {
@@ -97,6 +193,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (itemId) => {
+    if (!isAuthenticated) {
+        setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+        return;
+    }
     setIsLoading(true);
     try {
       await axios.delete(`https://benodejs-9.onrender.com/api/carts/${itemId}`, {
@@ -112,7 +212,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = () => {
-    setCartItems([]);
+    if (!isAuthenticated) {
+        setCartItems([]);
+    }
+    // Logic xóa giỏ hàng cho người dùng đăng nhập cần gọi API riêng nếu cần
   };
 
   const cartItemCount = useMemo(() => {

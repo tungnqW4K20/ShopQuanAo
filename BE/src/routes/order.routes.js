@@ -7,6 +7,8 @@ const { authenticateToken, authorizeRole } = require('../middlewares/auth.middle
 const router = express.Router();
 
 router.post('/', authenticateToken, orderController.create);
+router.post('/guest', orderController.createGuestOrder);
+
 router.get('/', authenticateToken, orderController.getMyOrders);
 router.get('/customer', authenticateToken, orderController.getByCustomerId);
 router.get('/:id', authenticateToken, orderController.getMyOrderById);

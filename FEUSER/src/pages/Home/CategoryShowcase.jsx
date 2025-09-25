@@ -98,14 +98,14 @@ const CategoryShowcase = () => {
           {categoriesToShow.map((category) => (
             <Link
               key={category.id}
-              to={`/category/${slugify(category.name)}`} // Tạo link động
+              to={`/category/${slugify(category.name)}`} 
               className="group block text-center transition-opacity hover:opacity-90"
               aria-label={`Xem ${category.name}`}
             >
               <div className="overflow-hidden rounded-lg shadow-sm border border-gray-100">
                 <img
-                  src={category.image_url} // Dữ liệu từ API
-                  alt={category.name} // Dữ liệu từ API
+                  src={category.image_url} 
+                  alt={category.name} 
                   className="w-full h-auto object-cover aspect-[3/4] transition-transform duration-300 ease-in-out group-hover:scale-105"
                   loading="lazy"
                 />

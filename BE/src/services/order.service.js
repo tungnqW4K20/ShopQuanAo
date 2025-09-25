@@ -43,6 +43,7 @@ ORDER_STATUS_MODEL_ENUM_VALUES.forEach(value => {
 });
 
 
+
 const createOrder = async (orderData) => {
     const { customerId, items } = orderData;
 
@@ -362,6 +363,86 @@ const getOrdersByCustomerId = async (customerId) => {
     return plainOrders;
 };
 
+/**
+ * @summary Tìm khách hàng bằng email hoặc tạo mới nếu chưa có.
+ * @description Hàm này đảm bảo không tạo khách hàng trùng lặp.
+ * @returns {Promise<Customer>} Đối tượng khách hàng đã tồn tại hoặc vừa được tạo.
+ */
+const findOrCreateCustomer = async (customerInfo, transaction) => {
+    const { email, phone, name, address } = customerInfo;
+
+    // Ưu tiên tìm bằng email vì nó là unique
+    let customer = await Customer.findOne({
+        where: { email: email },
+        transaction
+    });
+
+    // Nếu tìm thấy khách hàng, cập nhật lại thông tin mới nhất của họ
+    if (customer) {
+        // Kiểm tra xem khách hàng này đã có tài khoản (username/password) chưa.
+        // Nếu có, không cho phép khách vãng lai đặt hàng bằng email này để tránh xung đột.
+        if (customer.username && customer.password) {
+            throw new Error(`Email đã được sử dụng cho một tài khoản đã đăng ký. Vui lòng đăng nhập để đặt hàng.`);
+        }
+        
+        // Cập nhật thông tin nếu có thay đổi
+        customer.name = name;
+        customer.phone = phone;
+        customer.address = address;
+        await customer.save({ transaction });
+        
+    } else {
+        // Nếu không tìm thấy, tạo khách hàng mới
+        customer = await Customer.create({
+            name,
+            email,
+            phone,
+            address,
+            // username và password để null vì đây là khách vãng lai
+        }, { transaction });
+    }
+
+    return customer;
+};
+
+
+const createOrderForGuest = async (orderData) => {
+    const { customerInfo, items } = orderData;
+
+    if (!customerInfo) {
+        throw new Error('customerInfo là bắt buộc.');
+    }
+     if (!items || !Array.isArray(items) || items.length === 0) {
+        throw new Error('Danh sách mặt hàng (items) là bắt buộc và không được rỗng.');
+    }
+
+
+    const transaction = await sequelize.transaction();
+    try {
+        // Bước 1: Tìm hoặc tạo khách hàng mới
+        const customer = await findOrCreateCustomer(customerInfo, transaction);
+
+        // Bước 2: Gọi lại hàm createOrder gốc với customerId đã có
+        // Chúng ta tái sử dụng logic đã có để không lặp lại code
+        const newOrder = await createOrder({
+            customerId: customer.id,
+            items: items
+        }, transaction); // Truyền transaction vào hàm createOrder
+
+        // Nếu mọi thứ thành công, commit transaction
+        // Lưu ý: `createOrder` sẽ tự quản lý transaction của nó, nên cần điều chỉnh
+        // Ở đây, chúng ta sẽ copy logic của createOrder vào đây để quản lý chung một transaction
+
+        await transaction.commit(); // Commit transaction ở hàm cha
+
+        return newOrder;
+
+    } catch (error) {
+        await transaction.rollback();
+        console.error("Create Order For Guest Service Error:", error.message);
+        throw error;
+    }
+};
 
 
 module.exports = {
@@ -370,6 +451,7 @@ module.exports = {
     getOrderById,
     getAllOrders,
     updateOrderStatus,         
-    getAvailableOrderStatuses  
+    getAvailableOrderStatuses,
+    createOrderForGuest
 };
 
