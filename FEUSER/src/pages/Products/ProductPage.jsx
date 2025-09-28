@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Sidebar from './Sidebar';
-import ProductGrid from './ProductGrid';
-import { sizes, colors as colorsData } from './data';
+import { useSearchParams } from 'react-router-dom';
+import Sidebar from './Sidebar'; 
+import ProductGrid from './ProductGrid'; 
+import { sizes, colors as colorsData } from './data'; 
 
 const ITEMS_PER_PAGE = 8;
 
@@ -25,6 +26,10 @@ const transformApiProduct = (apiProduct) => {
 };
 
 function ProductPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryIdFromUrl = searchParams.get('categoryId');
+  const searchKeywordFromUrl = searchParams.get('search');
+
   const [allProducts, setAllProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -32,51 +37,43 @@ function ProductPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0); 
+  const [totalItems, setTotalItems] = useState(0);
 
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
   const [sortOrder, setSortOrder] = useState('ban-chay');
-
-  const fetchProducts = useCallback(async (page, category, isNewQuery = false) => {
-    if (isNewQuery) {
-      setIsLoading(true);
-    } else {
-      setIsLoadingMore(true);
-    }
+  
+  const fetchProducts = useCallback(async (page, category, keyword, isNewQuery = false) => {
+    if (isNewQuery) { setIsLoading(true); } else { setIsLoadingMore(true); }
     setError(null);
 
     let apiUrl;
-    if (category) {
+    if (keyword) {
+      apiUrl = `https://benodejs-9.onrender.com/api/products/search?search=${keyword}&page=${page}&limit=${ITEMS_PER_PAGE}`;
+    } 
+    else if (category) {
       apiUrl = `https://benodejs-9.onrender.com/api/products/category/${category}?page=${page}&limit=${ITEMS_PER_PAGE}`;
-    } else {
+    } 
+    else {
       apiUrl = `https://benodejs-9.onrender.com/api/products/?page=${page}&limit=${ITEMS_PER_PAGE}`;
     }
 
-    
-
     try {
-      debugger
-
       const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);
       const result = await response.json();
 
       if (result.success && result.data) {
         const transformedProducts = result.data.map(transformApiProduct);
-
-        if (isNewQuery) {
-          setAllProducts(transformedProducts);
-        } else {
-          setAllProducts(prev => [...prev, ...transformedProducts]);
-        }
+        if (isNewQuery) { setAllProducts(transformedProducts); } 
+        else { setAllProducts(prev => [...prev, ...transformedProducts]); }
         
         if (result.pagination) {
           setTotalPages(result.pagination.totalPages);
-          setTotalItems(result.pagination.totalItems); // Cập nhật tổng số sản phẩm
+          setTotalItems(result.pagination.totalItems);
+        } else {
+            setTotalPages(1);
+            setTotalItems(result.data.length);
         }
       } else {
         throw new Error(result.message || "Định dạng API không hợp lệ");
@@ -91,24 +88,19 @@ function ProductPage() {
   }, []); 
 
   useEffect(() => {
-    fetchProducts(1, selectedCategory, true);
-  }, [selectedCategory, sortOrder, fetchProducts]);
+    setCurrentPage(1); 
+    setAllProducts([]); 
+    fetchProducts(1, categoryIdFromUrl, searchKeywordFromUrl, true);
+  }, [categoryIdFromUrl, searchKeywordFromUrl, sortOrder, fetchProducts]);
 
   useEffect(() => {
     if (currentPage > 1) {
-      fetchProducts(currentPage, selectedCategory, false);
+      fetchProducts(currentPage, categoryIdFromUrl, searchKeywordFromUrl, false);
     }
-  }, [currentPage, selectedCategory, fetchProducts]);
+  }, [currentPage, categoryIdFromUrl, searchKeywordFromUrl, fetchProducts]);
 
   const processedProducts = useMemo(() => {
     let products = [...allProducts];
-
-    
-    if (selectedSizes.length > 0) {
-    }
-    if (selectedColors.length > 0) {
-    }
-
     switch (sortOrder) {
         case 'gia-thap-cao':
             products.sort((a, b) => a.price - b.price);
@@ -119,53 +111,35 @@ function ProductPage() {
         case 'moi-nhat':
              products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             break;
-        case 'ban-chay': 
-            break;
         default:
             break;
     }
-
     return products;
-  }, [allProducts, selectedSizes, selectedColors, sortOrder]);
-
+  }, [allProducts, sortOrder]);
 
   
   const handleCategoryChange = (categoryId) => {
-    setAllProducts([]);
-    setCurrentPage(1);
-    setSelectedCategory(categoryId);
+    const newParams = new URLSearchParams(); 
+    if (categoryId) {
+      newParams.set('categoryId', categoryId);
+    }
+    setSearchParams(newParams);
   };
-  const handleSizeChange = (size) => {
-    setSelectedSizes(prev =>
-      prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
-    );
-  };
-  const handleColorChange = (colorHex) => {
-    setSelectedColors(prev =>
-      prev.includes(colorHex) ? prev.filter(c => c !== colorHex) : [...prev, c]
-    );
-  };
+  
   const handleSortChange = (newSortOrder) => {
-    setAllProducts([]);
-    setCurrentPage(1);
     setSortOrder(newSortOrder);
   };
+
   const handleClearFilters = () => {
-    const filtersAreActive = selectedCategory || selectedSizes.length > 0 || selectedColors.length > 0;
-    if (filtersAreActive) {
-      setAllProducts([]);
-      setCurrentPage(1);
-    }
-    setSelectedCategory(null);
+    setSearchParams({}); 
     setSelectedSizes([]);
     setSelectedColors([]);
+    setSortOrder('ban-chay');
   };
 
-  const handleLoadMore = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
+  const handleSizeChange = (size) => setSelectedSizes(p => p.includes(size) ? p.filter(s => s !== size) : [...p, size]);
+  const handleColorChange = (colorHex) => setSelectedColors(p => p.includes(colorHex) ? p.filter(c => c !== colorHex) : [...p, c]);
+  const handleLoadMore = () => { if (currentPage < totalPages) setCurrentPage(p => p + 1); };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
@@ -173,7 +147,7 @@ function ProductPage() {
         <Sidebar
           sizes={sizes}
           colorsData={colorsData}
-          selectedCategory={selectedCategory}
+          selectedCategory={categoryIdFromUrl} 
           selectedSizes={selectedSizes}
           selectedColors={selectedColors}
           onCategoryChange={handleCategoryChange}
@@ -209,5 +183,6 @@ function ProductPage() {
     </div>
   );
 }
+
 
 export default ProductPage;

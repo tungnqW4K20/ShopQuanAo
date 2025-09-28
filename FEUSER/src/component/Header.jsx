@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiUser, FiShoppingBag, FiMenu, FiX, FiStar } from 'react-icons/fi';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
@@ -64,7 +64,7 @@ const MegaMenuNam = ({ categories }) => (
           categories.map(category => (
             <li key={category.id}>
               {/* Sử dụng hàm slugify để tạo link */}
-              <DropdownLink to={`/category/${slugify(category.name)}`}>
+              <DropdownLink to={`/products?categoryId=${category.id}`}>
                 {category.name}
               </DropdownLink>
             </li>
@@ -269,6 +269,26 @@ const Header = () => {
   const [dropdownTimeoutId, setDropdownTimeoutId] = useState(null);
   const [isCartPopupOpen, setIsCartPopupOpen] = useState(false);
   const [cartPopupTimeoutId, setCartPopupTimeoutId] = useState(null);
+
+  // useNavigate để chuyển trang
+  const navigate = useNavigate();
+  // useSearchParams để có thể cập nhật URL
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // State để lưu trữ giá trị người dùng nhập vào ô tìm kiếm
+  const [keyword, setKeyword] = useState(searchParams.get('search') || '');
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault(); // Ngăn form submit và tải lại trang
+    if (keyword.trim()) {
+      // Nếu có từ khóa, điều hướng đến trang products và đặt param 'search'
+      // Thao tác này sẽ tự động xóa các param khác như 'categoryId'
+      navigate(`/products?search=${keyword.trim()}`);
+    } else {
+      // Nếu ô tìm kiếm trống, điều hướng về trang products không có param
+      navigate('/products');
+    }
+  };
   
   // State mới để lưu trữ danh mục từ API
   const [maleCategories, setMaleCategories] = useState([]);
@@ -406,13 +426,20 @@ const Header = () => {
             </nav>
 
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="relative hidden md:block">
-                <label htmlFor="desktop-search" className="sr-only">Tìm kiếm sản phẩm</label>
-                <input id="desktop-search" type="search" placeholder="Tìm kiếm sản phẩm..." className="border border-gray-300 rounded-full py-1.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-48 lg:w-64" />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <FiSearch className="text-gray-400 w-4 h-4" />
-                </div>
-              </div>
+              <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
+      <label htmlFor="desktop-search" className="sr-only">Tìm kiếm sản phẩm</label>
+      <input
+        id="desktop-search"
+        type="search"
+        placeholder="Tìm kiếm sản phẩm..."
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        className="border border-gray-300 rounded-full py-1.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-48 lg:w-64"
+      />
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <FiSearch className="text-gray-400 w-4 h-4" />
+      </div>
+    </form>
               {isAuthenticated && 
                 <Link to="/profile" className="text-gray-600 hover:text-blue-600 transition-colors p-1 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label="Tài khoản">
                   <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
